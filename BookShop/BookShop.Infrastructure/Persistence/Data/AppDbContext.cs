@@ -22,8 +22,14 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
                 .HasValue<User>("Client")
                 .HasValue<Admin>("Admin");
             
-            entity.OwnsOne(u => u.Email.Address);
-            entity.HasIndex(u => u.Email.Address);
+            entity.OwnsOne(u => u.Email, owned =>
+            {
+                owned.Property(e => e.Address)
+                    .HasColumnName("Email");
+                
+                owned.HasIndex(e => e.Address)
+                    .HasDatabaseName("IX_User_Email");
+            });
         });
         
         modelBuilder.Entity<Book>()
