@@ -1,4 +1,6 @@
-﻿using BookShop.Infrastructure.Persistence.Data;
+﻿using BookShop.Domain.Interfaces;
+using BookShop.Infrastructure.Persistence.Data;
+using BookShop.Infrastructure.Persistence.Data.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,6 +23,14 @@ public static class DependencyInjection
                     }),
             contextLifetime: ServiceLifetime.Scoped,
             optionsLifetime: ServiceLifetime.Singleton);
+        
+        services.AddScoped(typeof(IRepository<>), typeof(GenericRepository<>));
+        
+        services.AddScoped<IAuthorRepository, AuthorRepository>();
+        services.AddScoped<IBookRepository, BookRepository>();
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IPublisherRepository, PublisherRepository>();
+        services.AddScoped<RefreshTokenRepository>();
         
         return services;
     }
