@@ -1,12 +1,14 @@
 ﻿using BookShop.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
+using BookShop.Domain.Views;
 
 namespace BookShop.Infrastructure.Persistence.Data;
 
 public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
     public DbSet<Book> Books { get; set; }
+    public DbSet<BookSearch> BookSearches { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<Profile> Profiles { get; set; }
     public DbSet<Publisher> Publishers { get; set; }
@@ -39,6 +41,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
                 v => JsonSerializer.Deserialize<string[]>(v, (JsonSerializerOptions?)null)!)
             .HasColumnType("nvarchar(max)");
         
+        modelBuilder.Entity<BookSearch>(eb =>
+        {
+            eb.HasNoKey();
+            eb.ToView("vwBookSearch");
+        });
         
         modelBuilder.Entity<RefreshToken>()
             .Property(r => r.IsRevoked)
