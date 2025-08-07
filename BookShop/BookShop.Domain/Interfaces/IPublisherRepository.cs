@@ -2,7 +2,7 @@
 
 namespace BookShop.Domain.Interfaces;
 
-public interface IPublisherRepository
+public interface IPublisherRepository : IRepository<Publisher>
 {
     Task<Publisher?> GetWithBookAsync(Guid publisherId);
 }
