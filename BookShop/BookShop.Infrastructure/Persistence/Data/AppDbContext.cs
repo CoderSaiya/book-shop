@@ -32,6 +32,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
                 owned.HasIndex(e => e.Address)
                     .HasDatabaseName("IX_User_Email");
             });
+            
+            entity.HasIndex(e => e.CreatedAt)
+                .HasDatabaseName("IX_User_CreatedAt");
         });
         
         modelBuilder.Entity<Book>()
@@ -56,6 +59,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             b.OwnsOne(p => p.Name);
             b.OwnsOne(p => p.Phone);
             b.OwnsOne(p => p.Address);
+            
+            b.HasIndex(e => e.DateOfBirth)
+                .HasDatabaseName("IX_User_DateOfBirth");
         });
         
         modelBuilder.Entity<Publisher>()
