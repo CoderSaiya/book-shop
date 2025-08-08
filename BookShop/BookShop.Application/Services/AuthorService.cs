@@ -96,7 +96,7 @@ public class AuthorService(IUnitOfWork uow) : IAuthorService
             (!await uow.Authors.ExistsAsync(id), "Tác giả không tồn tại.")
         );
         
-        await uow.Books.DeleteAsync(id);
+        await uow.Authors.DeleteAsync(id);
         await uow.SaveAsync();
     }
 }
