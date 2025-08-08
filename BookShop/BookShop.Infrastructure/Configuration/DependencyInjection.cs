@@ -1,4 +1,5 @@
 ﻿using BookShop.Application.Interface;
+using BookShop.Application.Services;
 using BookShop.Domain.Interfaces;
 using BookShop.Infrastructure.Identity;
 using BookShop.Infrastructure.Persistence.Data;
@@ -41,6 +42,7 @@ public static class DependencyInjection
 
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IUserService, IUserService>();
+        services.AddScoped<IAuthorService, AuthorService>();
         services.AddSingleton<IMailSender, EmailSender>();
         
         services.AddHostedService<RabbitMqListener>();
