@@ -6,7 +6,7 @@ using BookShop.Domain.Helpers;
 using BookShop.Domain.Interfaces;
 using Microsoft.AspNetCore.Http;
 
-namespace BookShop.Infrastructure.Services;
+namespace BookShop.Application.Services;
 
 public class BookService(IUnitOfWork unitOfWork) : IBookService
 {
