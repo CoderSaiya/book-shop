@@ -7,7 +7,6 @@ using BookShop.Infrastructure.Persistence.Data.Repositories;
 using BookShop.Infrastructure.Services.Background;
 using BookShop.Infrastructure.Services.Implements;
 using BookShop.Infrastructure.Services.Interfaces;
-using MailKit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -41,8 +40,9 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         services.AddScoped<IAuthService, AuthService>();
-        services.AddScoped<IUserService, IUserService>();
+        services.AddScoped<IUserService, UserService>();
         services.AddScoped<IAuthorService, AuthorService>();
+        services.AddScoped<IPublisherService, PublisherService>();
         services.AddSingleton<IMailSender, EmailSender>();
         
         services.AddHostedService<RabbitMqListener>();
