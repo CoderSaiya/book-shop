@@ -1,4 +1,6 @@
-﻿using BookShop.Domain.Interfaces;
+﻿using BookShop.Application.Interface;
+using BookShop.Domain.Interfaces;
+using BookShop.Infrastructure.Identity;
 using BookShop.Infrastructure.Persistence.Data;
 using BookShop.Infrastructure.Persistence.Data.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -32,6 +34,8 @@ public static class DependencyInjection
         services.AddScoped<IPublisherRepository, PublisherRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+        services.AddScoped<IAuthService, AuthService>();
         
         return services;
     }
