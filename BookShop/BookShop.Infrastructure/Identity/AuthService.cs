@@ -5,6 +5,7 @@ using System.Text;
 using BookShop.Application.DTOs.Req;
 using BookShop.Application.DTOs.Res;
 using BookShop.Application.Interface;
+using BookShop.Domain.Common;
 using BookShop.Domain.Entities;
 using BookShop.Domain.Interfaces;
 using BookShop.Domain.Models;
@@ -24,7 +25,7 @@ public class AuthService(
     public async Task RegisterAsync(RegisterReq req)
     {
         if (await unitOfWork.Users.EmailExistsAsync(req.Email))
-            throw new InvalidOperationException("Email đã được sử dụng.");
+            throw new EmailAlreadyUsedException("Email đã được sử dụng.");
 
         var hashed = HashPassword(req.Password);
         var user = new User
