@@ -1,6 +1,12 @@
-﻿using BookShop.Domain.Interfaces;
+﻿using BookShop.Application.Interface;
+using BookShop.Application.Services;
+using BookShop.Domain.Interfaces;
+using BookShop.Infrastructure.Identity;
 using BookShop.Infrastructure.Persistence.Data;
 using BookShop.Infrastructure.Persistence.Data.Repositories;
+using BookShop.Infrastructure.Services.Background;
+using BookShop.Infrastructure.Services.Implements;
+using BookShop.Infrastructure.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,7 +36,16 @@ public static class DependencyInjection
         services.AddScoped<IBookRepository, BookRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IPublisherRepository, PublisherRepository>();
-        services.AddScoped<RefreshTokenRepository>();
+        services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+        services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IUserService, UserService>();
+        services.AddScoped<IAuthorService, AuthorService>();
+        services.AddScoped<IPublisherService, PublisherService>();
+        services.AddSingleton<IMailSender, EmailSender>();
+        
+        services.AddHostedService<RabbitMqListener>();
         
         return services;
     }

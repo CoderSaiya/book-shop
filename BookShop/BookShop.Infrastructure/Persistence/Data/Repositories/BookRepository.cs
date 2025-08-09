@@ -8,7 +8,7 @@ public class BookRepository(AppDbContext context) : GenericRepository<Book>(cont
 {
     private readonly AppDbContext _context = context;
 
-    public async Task<IEnumerable<Book>> SearchAsync(string keyword, int limit = 50)
+    public async Task<IEnumerable<Book>> SearchAsync(string keyword, int limit = 50, int page = 1)
     {
         if (string.IsNullOrWhiteSpace(keyword))
             return Array.Empty<Book>();
@@ -20,6 +20,7 @@ public class BookRepository(AppDbContext context) : GenericRepository<Book>(cont
                 new[] { bs.Title, bs.AuthorName, bs.PublisherName },
                 searchTerm
             ))
+            .Skip((page - 1) * limit)
             .Take(limit)
             .Select(bs => bs.BookId)
             .ToListAsync();

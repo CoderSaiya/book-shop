@@ -2,7 +2,7 @@
 
 namespace BookShop.Domain.Interfaces;
 
-public interface IRefreshTokenRepository
+public interface IRefreshTokenRepository : IRepository<RefreshToken>
 {
     Task<RefreshToken?> GetByTokenAsync(string token);
 }
