@@ -24,13 +24,14 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
                 .HasValue<User>("Client")
                 .HasValue<Admin>("Admin");
             
-            entity.OwnsOne(u => u.Email, owned =>
+            entity.OwnsOne(u => u.Email, e =>
             {
-                owned.Property(e => e.Address)
-                    .HasColumnName("Email");
-                
-                owned.HasIndex(e => e.Address)
-                    .HasDatabaseName("IX_User_Email");
+                e.Property(p => p.Address)
+                    .HasColumnName("Email")
+                    .HasMaxLength(256)
+                    .IsRequired();
+
+                e.HasIndex(p => p.Address).IsUnique();
             });
             
             entity.HasIndex(e => e.CreatedAt)
