@@ -28,7 +28,7 @@ public class AuthService(
             throw new EmailAlreadyUsedException("Email đã được sử dụng.");
 
         var hashed = HashPassword(req.Password);
-        var user = new User
+        var user = new Client
         {
             Email = Email.Create(req.Email),
             Password = hashed,
