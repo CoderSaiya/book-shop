@@ -1,13 +1,14 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace BookShop.Application.DTOs.Req;
 
 public record UpdateProfileReq(
-    Guid UserId,
-    string? FirstName,
-    string? LastName,
-    string? PhoneNumber,
-    AddressDto? Address,
-    DateOnly? DateOfBirth,
-    IFormFile? Avatar
+    string? FirstName = null,
+    string? LastName = null,
+    string? PhoneNumber = null,
+    [ValidateNever]
+    AddressDto? Address = null,
+    DateOnly? DateOfBirth = null,
+    IFormFile? Avatar = null
     );
