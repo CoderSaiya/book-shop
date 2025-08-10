@@ -15,6 +15,6 @@ public class User
     [Required]
     public DateTime CreatedAt { get; set; } = DateTime.Now;
     
-    public Profile Profile { get; set; } = null!;
+    public Profile Profile { get; set; } = new();
     public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
 }

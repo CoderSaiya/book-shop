@@ -35,7 +35,7 @@ public class UserRepository(AppDbContext context) : GenericRepository<User>(cont
     public async Task<User?> GetByEmailAsync(string email) =>
         await _context.Users
             .Include(u => u.Profile)
-            .FirstOrDefaultAsync(u => u.Email.Equals(email));
+            .FirstOrDefaultAsync(u => u.Email.Address == email);
 
     public async Task<User?> GetByIdWithProfileAsync(Guid id) =>
         await _context.Users
@@ -44,5 +44,5 @@ public class UserRepository(AppDbContext context) : GenericRepository<User>(cont
 
     public async Task<bool> EmailExistsAsync(string email) =>
         await _context.Users
-            .AnyAsync(u => u.Email.Equals(email));
+            .AnyAsync(u => u.Email.Address == email);
 }

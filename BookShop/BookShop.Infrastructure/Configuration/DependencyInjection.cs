@@ -1,4 +1,5 @@
-﻿using BookShop.Application.Interface;
+﻿using System.Diagnostics;
+using BookShop.Application.Interface;
 using BookShop.Application.Services;
 using BookShop.Domain.Interfaces;
 using BookShop.Infrastructure.Identity;
@@ -29,6 +30,18 @@ public static class DependencyInjection
                     }),
             contextLifetime: ServiceLifetime.Scoped,
             optionsLifetime: ServiceLifetime.Singleton);
+        
+        services.AddProblemDetails(options =>
+        {
+            options.CustomizeProblemDetails = ctx =>
+            {
+                // tự động gắn traceId nếu chưa có
+                ctx.ProblemDetails.Extensions.TryAdd("traceId",
+                    Activity.Current?.Id ?? ctx.HttpContext.TraceIdentifier);
+            };
+        });
+        
+        services.AddExceptionHandler<AppExceptionHandler>();
         
         services.AddScoped(typeof(IRepository<>), typeof(GenericRepository<>));
         
