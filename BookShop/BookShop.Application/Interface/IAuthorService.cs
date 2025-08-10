@@ -8,6 +8,6 @@ public interface IAuthorService
     Task<IEnumerable<AuthorRes>> GetAll();
     Task<AuthorRes> GetById(Guid id);
     Task Create(CreateAuthorReq req);
-    Task Update(UpdateAuthorReq req);
+    Task Update(Guid authorId, UpdateAuthorReq req);
     Task Delete(Guid id);
 }

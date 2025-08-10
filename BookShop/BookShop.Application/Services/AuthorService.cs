@@ -1,6 +1,7 @@
 ﻿using BookShop.Application.DTOs.Req;
 using BookShop.Application.DTOs.Res;
 using BookShop.Application.Interface;
+using BookShop.Domain.Common;
 using BookShop.Domain.Entities;
 using BookShop.Domain.Helpers;
 using BookShop.Domain.Interfaces;
@@ -34,7 +35,7 @@ public class AuthorService(IUnitOfWork uow) : IAuthorService
         );
 
         var a = await uow.Authors.GetByIdAsync(id)
-            ?? throw new Exception("Tác giả không tồn tại.");
+            ?? throw new NotFoundException("Author", id.ToString());
 
         return new AuthorRes(
             AuthorId: a.Id,
@@ -70,14 +71,14 @@ public class AuthorService(IUnitOfWork uow) : IAuthorService
         await uow.SaveAsync();
     }
 
-    public async Task Update(UpdateAuthorReq req)
+    public async Task Update(Guid authorId, UpdateAuthorReq req)
     {
         ValidationHelper.Validate(
-            (req.AuthorId == Guid.Empty, "Id của tác giả không được để trống.")
+            (authorId == Guid.Empty, "Id của tác giả không được để trống.")
         );
         
-        var author = await uow.Authors.GetByIdAsync(req.AuthorId)
-            ?? throw new Exception("Tác giả không tồn tại.");
+        var author = await uow.Authors.GetByIdAsync(authorId)
+            ?? throw new NotFoundException("Author", authorId.ToString());
         
         if (req.Name is not null && req.Name != author.Name)
             author.Name = req.Name;
