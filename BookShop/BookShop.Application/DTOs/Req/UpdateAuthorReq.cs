@@ -3,7 +3,6 @@
 namespace BookShop.Application.DTOs.Req;
 
 public record UpdateAuthorReq(
-    Guid AuthorId,
-    string? Name,
-    string? Bio
+    string? Name = null,
+    string? Bio = null
     );
