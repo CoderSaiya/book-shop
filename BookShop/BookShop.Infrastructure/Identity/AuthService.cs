@@ -104,7 +104,7 @@ public class AuthService(
                 <tr>
                     <td style='background-color: #f8f9ff; padding: 30px; text-align: center; border-radius: 0 0 10px 10px; border-top: 1px solid #e1e5e9;'>
                         <p style='color: #999999; font-size: 14px; margin: 0 0 15px 0;'>
-                            📧 Email: support@bookshop.com | 📞 Hotline: 1900-BOOK-SHOP
+                            📧 Email: no-reply@bookshop.com | 📞 Hotline: 1900-BOOK-SHOP
                         </p>
                         <p style='color: #999999; font-size: 12px; margin: 0;'>
                             © 2025 BookShop. Tất cả quyền được bảo lưu.<br>

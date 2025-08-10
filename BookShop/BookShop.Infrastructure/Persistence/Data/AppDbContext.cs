@@ -72,7 +72,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.Entity<User>()
             .HasOne(u => u.Profile)
             .WithOne(p => p.User)
-            .HasForeignKey<Profile>(p => p.UserId);
+            .HasForeignKey<Profile>(p => p.UserId)
+            .IsRequired()
+            .OnDelete(DeleteBehavior.Cascade);
         
         modelBuilder.Entity<RefreshToken>()
             .HasKey(r => new { r.UserId, r.Token });

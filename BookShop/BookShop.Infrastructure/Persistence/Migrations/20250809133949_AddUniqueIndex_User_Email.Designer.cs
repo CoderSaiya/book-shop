@@ -4,6 +4,7 @@ using BookShop.Infrastructure.Persistence.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BookShop.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250809133949_AddUniqueIndex_User_Email")]
+    partial class AddUniqueIndex_User_Email
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -84,7 +87,8 @@ namespace BookShop.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("BookShop.Domain.Entities.Profile", b =>
                 {
-                    b.Property<Guid>("UserId")
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Avatar")
@@ -96,10 +100,16 @@ namespace BookShop.Infrastructure.Persistence.Migrations
                     b.Property<DateOnly?>("DateOfBirth")
                         .HasColumnType("date");
 
-                    b.HasKey("UserId");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
 
                     b.HasIndex("DateOfBirth")
                         .HasDatabaseName("IX_User_DateOfBirth");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
 
                     b.ToTable("Profiles");
                 });
@@ -236,7 +246,7 @@ namespace BookShop.Infrastructure.Persistence.Migrations
 
                     b.OwnsOne("BookShop.Domain.ValueObjects.Address", "Address", b1 =>
                         {
-                            b1.Property<Guid>("ProfileUserId")
+                            b1.Property<Guid>("ProfileId")
                                 .HasColumnType("uniqueidentifier");
 
                             b1.Property<string>("CityOrProvince")
@@ -255,17 +265,17 @@ namespace BookShop.Infrastructure.Persistence.Migrations
                                 .IsRequired()
                                 .HasColumnType("nvarchar(max)");
 
-                            b1.HasKey("ProfileUserId");
+                            b1.HasKey("ProfileId");
 
                             b1.ToTable("Profiles");
 
                             b1.WithOwner()
-                                .HasForeignKey("ProfileUserId");
+                                .HasForeignKey("ProfileId");
                         });
 
                     b.OwnsOne("BookShop.Domain.ValueObjects.Name", "Name", b1 =>
                         {
-                            b1.Property<Guid>("ProfileUserId")
+                            b1.Property<Guid>("ProfileId")
                                 .HasColumnType("uniqueidentifier");
 
                             b1.Property<string>("FirstName")
@@ -274,17 +284,17 @@ namespace BookShop.Infrastructure.Persistence.Migrations
                             b1.Property<string>("LastName")
                                 .HasColumnType("nvarchar(max)");
 
-                            b1.HasKey("ProfileUserId");
+                            b1.HasKey("ProfileId");
 
                             b1.ToTable("Profiles");
 
                             b1.WithOwner()
-                                .HasForeignKey("ProfileUserId");
+                                .HasForeignKey("ProfileId");
                         });
 
                     b.OwnsOne("BookShop.Domain.ValueObjects.Phone", "Phone", b1 =>
                         {
-                            b1.Property<Guid>("ProfileUserId")
+                            b1.Property<Guid>("ProfileId")
                                 .HasColumnType("uniqueidentifier");
 
                             b1.Property<string>("CountryCode")
@@ -293,12 +303,12 @@ namespace BookShop.Infrastructure.Persistence.Migrations
                             b1.Property<string>("SubscriberNumber")
                                 .HasColumnType("nvarchar(max)");
 
-                            b1.HasKey("ProfileUserId");
+                            b1.HasKey("ProfileId");
 
                             b1.ToTable("Profiles");
 
                             b1.WithOwner()
-                                .HasForeignKey("ProfileUserId");
+                                .HasForeignKey("ProfileId");
                         });
 
                     b.Navigation("Address");
