@@ -3,9 +3,8 @@
 namespace BookShop.Application.DTOs.Req;
 
 public record UpdateBookReq(
-    Guid BookId, 
-    Guid? AuthorId, 
-    Guid? PublisherId, 
+    Guid? AuthorId = null, 
+    Guid? PublisherId = null, 
     string? Title = null, 
     string? Description = null, 
     decimal? Price = null, 

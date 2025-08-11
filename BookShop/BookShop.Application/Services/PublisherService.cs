@@ -2,6 +2,7 @@
 using BookShop.Application.DTOs.Req;
 using BookShop.Application.DTOs.Res;
 using BookShop.Application.Interface;
+using BookShop.Domain.Common;
 using BookShop.Domain.Entities;
 using BookShop.Domain.Helpers;
 using BookShop.Domain.Interfaces;
@@ -42,7 +43,7 @@ public class PublisherService(IUnitOfWork uow) : IPublisherService
         );
 
         var p = await uow.Publishers.GetByIdAsync(id)
-                ?? throw new Exception("Nhà xuất bản không tồn tại.");
+                ?? throw new NotFoundException("Publisher", id.ToString());
         
         return new PublisherRes(
             PublisherId: p.Id,
@@ -90,14 +91,14 @@ public class PublisherService(IUnitOfWork uow) : IPublisherService
         await uow.SaveAsync();
     }
 
-    public async Task Update(UpdatePublisherReq req)
+    public async Task Update(Guid publisherId, UpdatePublisherReq req)
     {
         ValidationHelper.Validate(
-            (req.PublisherId == Guid.Empty, "Id nhà xuất bản không được để trống")
+            (publisherId == Guid.Empty, "Id nhà xuất bản không được để trống")
         );
         
-        var publisher = await uow.Publishers.GetByIdAsync(req.PublisherId)
-                     ?? throw new Exception("Nhà xuất bản không tồn tại.");
+        var publisher = await uow.Publishers.GetByIdAsync(publisherId)
+                     ?? throw new NotFoundException("Publisher", publisherId.ToString());
         
         if (req.Name is not null && req.Name != publisher.Name)
             publisher.Name = req.Name;

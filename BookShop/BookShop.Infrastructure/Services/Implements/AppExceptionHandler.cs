@@ -25,7 +25,9 @@ public class AppExceptionHandler(
             UnauthorizedAccessException => (StatusCodes.Status401Unauthorized, "Không được phép"),
             NotFoundException => (StatusCodes.Status404NotFound, "Không tìm thấy"),
             DomainValidationException => (StatusCodes.Status400BadRequest, "Dữ liệu không hợp lệ"),
-            ValidationException => (StatusCodes.Status400BadRequest, "Dữ liệu không hợp lệ"),
+            ValidationException
+                or System.ComponentModel.DataAnnotations.ValidationException
+                => (StatusCodes.Status400BadRequest, "Dữ liệu không hợp lệ"),
             _ => (StatusCodes.Status500InternalServerError, "Lỗi không mong muốn")
         };
 

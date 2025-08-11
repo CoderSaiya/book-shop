@@ -8,6 +8,6 @@ public interface IPublisherService
     Task<IEnumerable<PublisherRes>> GetAll();
     Task<PublisherRes> GetById(Guid id);
     Task Create(CreatePublisherReq req);
-    Task Update(UpdatePublisherReq req);
+    Task Update(Guid publisherId, UpdatePublisherReq req);
     Task Delete(Guid id);
 }

@@ -1,6 +1,7 @@
 ﻿using BookShop.Application.DTOs.Req;
 using BookShop.Application.DTOs.Res;
 using BookShop.Application.Interface;
+using BookShop.Domain.Common;
 using BookShop.Domain.Entities;
 using BookShop.Domain.Helpers;
 using BookShop.Domain.Interfaces;
@@ -26,12 +27,11 @@ public class BookService(IUnitOfWork unitOfWork) : IBookService
     public async Task<BookRes> GetById(Guid bookId)
     {
         ValidationHelper.Validate(
-            (bookId == Guid.Empty, "Id của sách không được để trống."),
-            (!await unitOfWork.Books.ExistsAsync(bookId), "Sách không tồn tại.")
+            (bookId == Guid.Empty, "Id của sách không được để trống.")
         );
 
         var b = await unitOfWork.Books.GetByIdAsync(bookId)
-                ?? throw new Exception("Sách không tồn tại.");
+                ?? throw new NotFoundException("Sách", bookId.ToString());
 
         return new BookRes(
             BookId: b.Id,
@@ -82,20 +82,20 @@ public class BookService(IUnitOfWork unitOfWork) : IBookService
         await unitOfWork.SaveAsync();
     }
 
-    public async Task Update(UpdateBookReq request)
+    public async Task Update(Guid bookId, UpdateBookReq request)
     {
         ValidationHelper.Validate(
-            (request.BookId == Guid.Empty, "Id của sách không được để trống."),
+            (bookId == Guid.Empty, "Id của sách không được để trống."),
             (request.AuthorId.HasValue && !await unitOfWork.Authors.ExistsAsync(request.AuthorId.Value),
                 "Tác giả không tồn tại."),
             (request.PublisherId.HasValue && !await unitOfWork.Publishers.ExistsAsync(request.PublisherId.Value),
                 "Nhà xuất bản không tồn tại."),
-            (request.Price < 0, "Giá phải là số không âm."),
-            (request.Stock < 0, "Số lượng phải là số không âm.")
+            (request.Price is < 0, "Giá phải là số không âm."),
+            (request.Stock is < 0, "Số lượng phải là số không âm.")
             );
         
-        var existingBook = await unitOfWork.Books.GetByIdAsync(request.BookId) 
-                            ?? throw new Exception("Sách không tồn tại.");
+        var existingBook = await unitOfWork.Books.GetByIdAsync(bookId) 
+                            ?? throw new NotFoundException("Sách", bookId.ToString());
         
         static void SetIf<T>(T? value, Action<T> setter) where T : struct
         {
