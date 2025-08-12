@@ -14,6 +14,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Publisher> Publishers { get; set; }
     public DbSet<Author> Authors { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
+    public DbSet<Category> Categories { get; set; }
+    public DbSet<Cart> Carts { get; set; }
+    public DbSet<CartItem> CartItems { get; set; }
+    public DbSet<Order> Orders { get; set; }
+    public DbSet<OrderItem> OrderItems { get; set; }
+    public DbSet<Review> Reviews { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -78,5 +84,74 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         
         modelBuilder.Entity<RefreshToken>()
             .HasKey(r => new { r.UserId, r.Token });
+        
+        // New entity configurations
+        modelBuilder.Entity<Cart>()
+            .HasOne(c => c.User)
+            .WithOne(u => u.Cart)
+            .HasForeignKey<Cart>(c => c.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+            
+        modelBuilder.Entity<CartItem>()
+            .HasOne(ci => ci.Cart)
+            .WithMany(c => c.CartItems)
+            .HasForeignKey(ci => ci.CartId)
+            .OnDelete(DeleteBehavior.Cascade);
+            
+        modelBuilder.Entity<CartItem>()
+            .HasOne(ci => ci.Book)
+            .WithMany(b => b.CartItems)
+            .HasForeignKey(ci => ci.BookId)
+            .OnDelete(DeleteBehavior.Restrict);
+            
+        modelBuilder.Entity<Order>()
+            .HasOne(o => o.User)
+            .WithMany(u => u.Orders)
+            .HasForeignKey(o => o.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+            
+        modelBuilder.Entity<OrderItem>()
+            .HasOne(oi => oi.Order)
+            .WithMany(o => o.OrderItems)
+            .HasForeignKey(oi => oi.OrderId)
+            .OnDelete(DeleteBehavior.Cascade);
+            
+        modelBuilder.Entity<OrderItem>()
+            .HasOne(oi => oi.Book)
+            .WithMany(b => b.OrderItems)
+            .HasForeignKey(oi => oi.BookId)
+            .OnDelete(DeleteBehavior.Restrict);
+            
+        modelBuilder.Entity<Review>()
+            .HasOne(r => r.User)
+            .WithMany(u => u.Reviews)
+            .HasForeignKey(r => r.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+            
+        modelBuilder.Entity<Review>()
+            .HasOne(r => r.Book)
+            .WithMany(b => b.Reviews)
+            .HasForeignKey(r => r.BookId)
+            .OnDelete(DeleteBehavior.Cascade);
+            
+        modelBuilder.Entity<Book>()
+            .HasOne(b => b.Category)
+            .WithMany(c => c.Books)
+            .HasForeignKey(b => b.CategoryId)
+            .OnDelete(DeleteBehavior.Restrict);
+            
+        // Index configurations
+        modelBuilder.Entity<Order>()
+            .HasIndex(o => o.OrderNumber)
+            .IsUnique();
+            
+        modelBuilder.Entity<Order>()
+            .HasIndex(o => o.CreatedAt)
+            .HasDatabaseName("IX_Order_CreatedAt");
+            
+        modelBuilder.Entity<Review>()
+            .HasIndex(r => new { r.UserId, r.BookId })
+            .IsUnique()
+            .HasDatabaseName("IX_Review_User_Book");
     }
 }
