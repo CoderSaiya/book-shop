@@ -31,8 +31,12 @@ public class RabbitMqListener : BackgroundService
         _factory = new ConnectionFactory
         {
             HostName = _settings.HostName,
+            Port = 5672,
             UserName = _settings.UserName,
-            Password = _settings.Password
+            Password = _settings.Password,
+            VirtualHost = "/",
+            AutomaticRecoveryEnabled = true,
+            NetworkRecoveryInterval = TimeSpan.FromSeconds(5)
         };
     }
 
