@@ -10,5 +10,6 @@ public record BookRes(
     decimal Price,
     List<string> Images,
     string PublishedDate,
-    bool IsSold
+    bool IsSold,
+    CategoryDto Category
     );

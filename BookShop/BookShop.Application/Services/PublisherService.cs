@@ -33,7 +33,11 @@ public class PublisherService(IUnitOfWork uow) : IPublisherService
                 Price: b.Price,
                 Images: b.CoverImage.ToList(),
                 PublishedDate: b.PublishedDate.ToString("dd/MM/yyyy"),
-                IsSold: b.Stock <= 0
+                IsSold: b.Stock <= 0,
+                Category: new CategoryDto(
+                    Id: b.CategoryId,
+                    Name: b.Category.Name
+                )
             ))
         ));
 
@@ -66,7 +70,11 @@ public class PublisherService(IUnitOfWork uow) : IPublisherService
                 Price: b.Price,
                 Images: b.CoverImage.ToList(),
                 PublishedDate: b.PublishedDate.ToString("dd/MM/yyyy"),
-                IsSold: b.Stock <= 0
+                IsSold: b.Stock <= 0,
+                Category: new CategoryDto(
+                    Id: b.CategoryId,
+                    Name: b.Category.Name
+                )
             ))
         );
     }
