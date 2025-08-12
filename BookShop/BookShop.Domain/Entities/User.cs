@@ -17,4 +17,9 @@ public class User
     
     public Profile Profile { get; set; } = null!;
     public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+    
+    // Navigation properties
+    public Cart? Cart { get; set; }
+    public ICollection<Order> Orders { get; set; } = new List<Order>();
+    public ICollection<Review> Reviews { get; set; } = new List<Review>();
 }
