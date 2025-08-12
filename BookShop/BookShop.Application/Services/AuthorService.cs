@@ -22,6 +22,7 @@ public class AuthorService(IUnitOfWork uow) : IAuthorService
                 Title: b.Title,
                 Description: b.Description ?? string.Empty,
                 Stock: b.Stock,
+                Price: b.Price,
                 Images: b.CoverImage.ToList(),
                 PublishedDate: b.PublishedDate.ToString("dd/MM/yyyy"),
                 IsSold: b.Stock <= 0
@@ -48,6 +49,7 @@ public class AuthorService(IUnitOfWork uow) : IAuthorService
                 Title: b.Title,
                 Description: b.Description ?? string.Empty,
                 Stock: b.Stock,
+                Price: b.Price,
                 Images: b.CoverImage.ToList(),
                 PublishedDate: b.PublishedDate.ToString("dd/MM/yyyy"),
                 IsSold: b.Stock <= 0

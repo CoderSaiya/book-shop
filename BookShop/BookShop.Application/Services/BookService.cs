@@ -12,13 +12,14 @@ namespace BookShop.Application.Services;
 public class BookService(IUnitOfWork unitOfWork) : IBookService
 {
     public async Task<IEnumerable<BookRes>> Search(string keyword = "", int page = 1, int pageSize = 50) => 
-        (await unitOfWork.Books.SearchAsync(keyword, page, pageSize)).Select(b => new BookRes(
+        (await unitOfWork.Books.SearchAsync(keyword, pageSize, page)).Select(b => new BookRes(
             BookId: b.Id,
             AuthorName: b.Author.Name,
             PublisherName: b.Publisher.Name,
             Title: b.Title,
             Description: b.Description ?? "",
             Stock: b.Stock,
+            Price: b.Price,
             Images: b.CoverImage.ToList(),
             PublishedDate: b.PublishedDate.ToString("dd/MM/yyyy"),
             IsSold: b.Stock <= 0
@@ -40,6 +41,7 @@ public class BookService(IUnitOfWork unitOfWork) : IBookService
             Title: b.Title,
             Description: b.Description ?? string.Empty,
             Stock: b.Stock,
+            Price: b.Price,
             Images: b.CoverImage.ToList(),
             PublishedDate: b.PublishedDate.ToString("dd/MM/yyyy"),
             IsSold: b.Stock <= 0
@@ -52,7 +54,7 @@ public class BookService(IUnitOfWork unitOfWork) : IBookService
             (request.AuthorId == Guid.Empty, "Id của tác giả không được để trống."),
             (!await unitOfWork.Authors.ExistsAsync(request.AuthorId), "Tác giả không tồn tại"),
             (request.PublisherId == Guid.Empty, "Id của nhà xuất bản không được để trống."),
-            (!await unitOfWork.Publishers.ExistsAsync(request.AuthorId), "Nhà xuất bản không tồn tại"),
+            (!await unitOfWork.Publishers.ExistsAsync(request.PublisherId), "Nhà xuất bản không tồn tại"),
             (string.IsNullOrWhiteSpace(request.Title), "Tiêu đề không được để trống."),
             (!request.Images.Any(), "Phải có ít nhất một hình ảnh."),
             (request.Price < 0, "Giá phải là số không âm."),
@@ -63,6 +65,7 @@ public class BookService(IUnitOfWork unitOfWork) : IBookService
         {
             AuthorId = request.AuthorId,
             PublisherId = request.PublisherId,
+            CategoryId = request.CategoryId,
             Title = request.Title.Trim(),
             Price = request.Price!.Value,
             Stock = request.Stock!.Value,
@@ -79,6 +82,7 @@ public class BookService(IUnitOfWork unitOfWork) : IBookService
         }
         book.CoverImage = base64Images.ToArray();
         
+        await unitOfWork.Books.AddAsync(book);
         await unitOfWork.SaveAsync();
     }
 
