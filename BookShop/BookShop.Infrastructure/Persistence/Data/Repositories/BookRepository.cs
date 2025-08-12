@@ -45,6 +45,8 @@ public class BookRepository(AppDbContext context) : GenericRepository<Book>(cont
         var books = await _context.Books
             .Include(b => b.Author)
             .Include(b => b.Publisher)
+            .Include(b => b.Category)
+            .Include(b => b.Reviews)
             .Where(b => hits.Contains(b.Id))
             .ToListAsync();
 
