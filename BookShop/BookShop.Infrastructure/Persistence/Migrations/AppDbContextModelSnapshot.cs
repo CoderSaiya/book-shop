@@ -49,6 +49,9 @@ namespace BookShop.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("AuthorId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid>("CategoryId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("CoverImage")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -77,9 +80,206 @@ namespace BookShop.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("AuthorId");
 
+                    b.HasIndex("CategoryId");
+
                     b.HasIndex("PublisherId");
 
                     b.ToTable("Books");
+                });
+
+            modelBuilder.Entity("BookShop.Domain.Entities.Cart", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("Carts");
+                });
+
+            modelBuilder.Entity("BookShop.Domain.Entities.CartItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BookId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CartId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BookId");
+
+                    b.HasIndex("CartId");
+
+                    b.ToTable("CartItems");
+                });
+
+            modelBuilder.Entity("BookShop.Domain.Entities.Category", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Categories");
+                });
+
+            modelBuilder.Entity("BookShop.Domain.Entities.Order", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeliveredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("OrderNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime?>("PaidAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("PaymentMethod")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PaymentStatus")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ShippedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ShippingAddress")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("ShippingCity")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("ShippingPhone")
+                        .IsRequired()
+                        .HasMaxLength(15)
+                        .HasColumnType("nvarchar(15)");
+
+                    b.Property<string>("ShippingPostalCode")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt")
+                        .HasDatabaseName("IX_Order_CreatedAt");
+
+                    b.HasIndex("OrderNumber")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Orders");
+                });
+
+            modelBuilder.Entity("BookShop.Domain.Entities.OrderItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BookId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("TotalPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BookId");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("OrderItems");
                 });
 
             modelBuilder.Entity("BookShop.Domain.Entities.Profile", b =>
@@ -145,6 +345,48 @@ namespace BookShop.Infrastructure.Persistence.Migrations
                     b.HasKey("UserId", "Token");
 
                     b.ToTable("RefreshTokens");
+                });
+
+            modelBuilder.Entity("BookShop.Domain.Entities.Review", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BookId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Comment")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("HelpfulCount")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsVerifiedPurchase")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BookId");
+
+                    b.HasIndex("UserId", "BookId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Review_User_Book");
+
+                    b.ToTable("Reviews");
                 });
 
             modelBuilder.Entity("BookShop.Domain.Entities.User", b =>
@@ -215,6 +457,12 @@ namespace BookShop.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("BookShop.Domain.Entities.Category", "Category")
+                        .WithMany("Books")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("BookShop.Domain.Entities.Publisher", "Publisher")
                         .WithMany("Books")
                         .HasForeignKey("PublisherId")
@@ -223,7 +471,69 @@ namespace BookShop.Infrastructure.Persistence.Migrations
 
                     b.Navigation("Author");
 
+                    b.Navigation("Category");
+
                     b.Navigation("Publisher");
+                });
+
+            modelBuilder.Entity("BookShop.Domain.Entities.Cart", b =>
+                {
+                    b.HasOne("BookShop.Domain.Entities.User", "User")
+                        .WithOne("Cart")
+                        .HasForeignKey("BookShop.Domain.Entities.Cart", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("BookShop.Domain.Entities.CartItem", b =>
+                {
+                    b.HasOne("BookShop.Domain.Entities.Book", "Book")
+                        .WithMany("CartItems")
+                        .HasForeignKey("BookId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("BookShop.Domain.Entities.Cart", "Cart")
+                        .WithMany("CartItems")
+                        .HasForeignKey("CartId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Book");
+
+                    b.Navigation("Cart");
+                });
+
+            modelBuilder.Entity("BookShop.Domain.Entities.Order", b =>
+                {
+                    b.HasOne("BookShop.Domain.Entities.User", "User")
+                        .WithMany("Orders")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("BookShop.Domain.Entities.OrderItem", b =>
+                {
+                    b.HasOne("BookShop.Domain.Entities.Book", "Book")
+                        .WithMany("OrderItems")
+                        .HasForeignKey("BookId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("BookShop.Domain.Entities.Order", "Order")
+                        .WithMany("OrderItems")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Book");
+
+                    b.Navigation("Order");
                 });
 
             modelBuilder.Entity("BookShop.Domain.Entities.Profile", b =>
@@ -356,6 +666,25 @@ namespace BookShop.Infrastructure.Persistence.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("BookShop.Domain.Entities.Review", b =>
+                {
+                    b.HasOne("BookShop.Domain.Entities.Book", "Book")
+                        .WithMany("Reviews")
+                        .HasForeignKey("BookId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BookShop.Domain.Entities.User", "User")
+                        .WithMany("Reviews")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Book");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("BookShop.Domain.Entities.User", b =>
                 {
                     b.OwnsOne("BookShop.Domain.ValueObjects.Email", "Email", b1 =>
@@ -389,6 +718,30 @@ namespace BookShop.Infrastructure.Persistence.Migrations
                     b.Navigation("Books");
                 });
 
+            modelBuilder.Entity("BookShop.Domain.Entities.Book", b =>
+                {
+                    b.Navigation("CartItems");
+
+                    b.Navigation("OrderItems");
+
+                    b.Navigation("Reviews");
+                });
+
+            modelBuilder.Entity("BookShop.Domain.Entities.Cart", b =>
+                {
+                    b.Navigation("CartItems");
+                });
+
+            modelBuilder.Entity("BookShop.Domain.Entities.Category", b =>
+                {
+                    b.Navigation("Books");
+                });
+
+            modelBuilder.Entity("BookShop.Domain.Entities.Order", b =>
+                {
+                    b.Navigation("OrderItems");
+                });
+
             modelBuilder.Entity("BookShop.Domain.Entities.Publisher", b =>
                 {
                     b.Navigation("Books");
@@ -396,10 +749,16 @@ namespace BookShop.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("BookShop.Domain.Entities.User", b =>
                 {
+                    b.Navigation("Cart");
+
+                    b.Navigation("Orders");
+
                     b.Navigation("Profile")
                         .IsRequired();
 
                     b.Navigation("RefreshTokens");
+
+                    b.Navigation("Reviews");
                 });
 #pragma warning restore 612, 618
         }

@@ -23,7 +23,6 @@ public class Book
     [MinLength(10)]
     public string? Description { get; set; }
     public int Stock { get; set; } = 0;
-    public decimal Price { get; set; } = 0;
     [Required]
     public string[] CoverImage { get; set; } = null!;
     [Required]
