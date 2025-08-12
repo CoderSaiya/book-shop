@@ -7,6 +7,7 @@ public record BookRes(
     string Title,
     string Description,
     int Stock,
+    decimal Price,
     List<string> Images,
     string PublishedDate,
     bool IsSold
