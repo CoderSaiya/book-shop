@@ -129,10 +129,11 @@ public class AuthService(
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new Claim(ClaimTypes.Email, user.Email.ToString()),
             new Claim(ClaimTypes.Role, user.GetType().ToString())
         };
-        var accessToken  = GenerateAccessToken(claims);
+        var accessToken = GenerateAccessToken(claims);
         var refreshToken = GenerateRefreshToken();
 
         var rt = new RefreshToken
@@ -168,7 +169,7 @@ public class AuthService(
             issuer: configuration["JWT:Issuer"],
             audience: configuration["JWT:Audience"],
             claims: claims,
-            expires: DateTime.Now.AddMinutes(30),
+            expires: DateTime.UtcNow.AddMinutes(30),
             signingCredentials: creds);
         
         return new JwtSecurityTokenHandler().WriteToken(token);
