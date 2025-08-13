@@ -10,7 +10,6 @@ using BookShop.Domain.Entities;
 using BookShop.Domain.Interfaces;
 using BookShop.Domain.Models;
 using BookShop.Domain.ValueObjects;
-using BookShop.Infrastructure.Services.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 
