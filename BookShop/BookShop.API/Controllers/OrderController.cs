@@ -3,6 +3,7 @@ using BookShop.Application.DTOs.Res;
 using BookShop.Application.Interface;
 using BookShop.Domain.Common;
 using BookShop.Domain.Helpers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BookShop.API.Controllers;
@@ -12,7 +13,7 @@ namespace BookShop.API.Controllers;
 public class OrderController(IOrderService svc) : Controller
 {
     [HttpPost]
-    // [Authorize]
+    [Authorize]
     [ProducesResponseType(typeof(OrderDetailRes), StatusCodes.Status201Created)]
     public async Task<IActionResult> Create([FromBody] CreateOrderReq req)
     {
@@ -25,7 +26,7 @@ public class OrderController(IOrderService svc) : Controller
     }
 
     [HttpGet("{id:guid}")]
-    // [Authorize]
+    [Authorize]
     [ProducesResponseType(typeof(OrderDetailRes), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetById([FromRoute] Guid id)
     {
@@ -35,7 +36,7 @@ public class OrderController(IOrderService svc) : Controller
         
 
     [HttpGet("my")]
-    // [Authorize]
+    [Authorize]
     [ProducesResponseType(typeof(IReadOnlyList<OrderSummaryRes>), StatusCodes.Status200OK)]
     public Task<IReadOnlyList<OrderSummaryRes>> GetMine(
         [FromQuery] int page = 1,
@@ -43,7 +44,7 @@ public class OrderController(IOrderService svc) : Controller
         => svc.GetByUserAsync(User.GetUserId(), page, pageSize);
 
     [HttpPatch("{id:guid}/status")]
-    // [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> UpdateStatus(
         [FromRoute] Guid id,
@@ -54,7 +55,7 @@ public class OrderController(IOrderService svc) : Controller
     }
 
     [HttpPatch("{id:guid}/payment")]
-    // [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> UpdatePayment(
         [FromRoute] Guid id,
@@ -65,7 +66,7 @@ public class OrderController(IOrderService svc) : Controller
     }
 
     [HttpGet("revenue")]
-    // [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(decimal), StatusCodes.Status200OK)]
     public async Task<IActionResult> Revenue(
         [FromQuery] DateTime fromUtc,

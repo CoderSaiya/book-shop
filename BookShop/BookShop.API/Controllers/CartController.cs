@@ -3,6 +3,7 @@ using BookShop.Application.DTOs.Res;
 using BookShop.Application.Interface;
 using BookShop.Domain.Common;
 using BookShop.Domain.Helpers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BookShop.API.Controllers;
@@ -12,6 +13,7 @@ namespace BookShop.API.Controllers;
 public class CartController(ICartService svc) : Controller
 {
     [HttpGet("active")]
+    [Authorize]
     [ProducesResponseType(typeof(CartRes), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetActive()
     {
@@ -20,6 +22,7 @@ public class CartController(ICartService svc) : Controller
     }
 
     [HttpPost("items")]
+    [Authorize]
     [ProducesResponseType(typeof(CartRes), StatusCodes.Status200OK)]
     public async Task<IActionResult> AddOrUpdate([FromBody] AddCartItemReq req)
     {
@@ -28,6 +31,7 @@ public class CartController(ICartService svc) : Controller
     }
 
     [HttpDelete("items/{bookId:guid}")]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Remove(Guid bookId)
     {
@@ -36,6 +40,7 @@ public class CartController(ICartService svc) : Controller
     }
 
     [HttpPost("clear")]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Clear()
     {
@@ -44,6 +49,7 @@ public class CartController(ICartService svc) : Controller
     }
 
     [HttpPost("deactivate")]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Deactivate()
     {

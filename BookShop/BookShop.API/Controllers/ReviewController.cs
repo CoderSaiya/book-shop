@@ -13,7 +13,7 @@ namespace BookShop.API.Controllers;
 public class ReviewController(IReviewService svc) : Controller
 {
     [HttpPost]
-    // [Authorize]
+    [Authorize]
     [ProducesResponseType(typeof(ReviewRes), StatusCodes.Status201Created)]
     public async Task<IActionResult> Create([FromBody] CreateReviewReq req)
     {

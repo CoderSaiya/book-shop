@@ -3,6 +3,7 @@ using BookShop.Application.DTOs.Req;
 using BookShop.Application.DTOs.Res;
 using BookShop.Application.Interface;
 using BookShop.Domain.Common;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BookShop.API.Controllers;
@@ -12,6 +13,7 @@ namespace BookShop.API.Controllers;
 public class UserController(IUserService userService) : Controller
 {
     [HttpGet]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(GlobalResponse<IEnumerable<UserRes>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> Search(
         [FromQuery] string keyword = "",
@@ -23,6 +25,7 @@ public class UserController(IUserService userService) : Controller
     }
 
     [HttpGet("{id:guid}")]
+    [Authorize]
     [ProducesResponseType(typeof(GlobalResponse<UserRes>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById([FromRoute] Guid id)
@@ -32,6 +35,7 @@ public class UserController(IUserService userService) : Controller
     }
 
     [HttpPut("profile/{id:guid}")]
+    [Authorize]
     [Consumes("multipart/form-data")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -49,6 +53,7 @@ public class UserController(IUserService userService) : Controller
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
