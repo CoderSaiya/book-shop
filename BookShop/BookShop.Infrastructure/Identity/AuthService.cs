@@ -131,8 +131,9 @@ public class AuthService(
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new Claim(ClaimTypes.Email, user.Email.ToString()),
-            new Claim(ClaimTypes.Role, user.GetType().ToString())
+            new Claim(ClaimTypes.Role, MapRole(user))
         };
+        Console.Write("CMM: " + user.GetType().ToString());
         var accessToken = GenerateAccessToken(claims);
         var refreshToken = GenerateRefreshToken();
 
@@ -196,11 +197,18 @@ public class AuthService(
         {
             new Claim(ClaimTypes.Email, user.Email.Address),
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Role, user.GetType().ToString())
+            new Claim(ClaimTypes.Role, MapRole(user))
         };
         
         var newAccessToken = GenerateAccessToken(claims);
         
         return newAccessToken;
     }
+    
+    private static string MapRole(User baseUser) => baseUser switch
+    {
+        Admin     => "Admin",
+        Client    => "Client",
+        _         => "User"
+    };
 }

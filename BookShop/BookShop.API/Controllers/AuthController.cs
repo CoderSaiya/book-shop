@@ -43,7 +43,7 @@ public class AuthController(IAuthService authService) : Controller
     }
     
     [HttpPost("refresh-token")]
-    [AllowAnonymous]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

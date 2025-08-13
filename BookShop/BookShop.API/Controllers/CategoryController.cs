@@ -13,7 +13,7 @@ namespace BookShop.API.Controllers;
 public class CategoryController(ICategoryService svc)  : Controller
 {
     [HttpPost]
-    // [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(CategoryRes), StatusCodes.Status201Created)]
     public async Task<IActionResult> Create([FromBody] CreateCategoryReq req)
     {
@@ -25,7 +25,7 @@ public class CategoryController(ICategoryService svc)  : Controller
     }
 
     [HttpPut("{id:guid}")]
-    // [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(CategoryDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateCategoryReq req)
     {
@@ -34,7 +34,7 @@ public class CategoryController(ICategoryService svc)  : Controller
     }
 
     [HttpPut("{id:guid}/icon")]
-    // [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> UpdateIcon(Guid id, [FromBody] UpdateCategoryIconReq req)
     {
@@ -43,7 +43,7 @@ public class CategoryController(ICategoryService svc)  : Controller
     }
 
     [HttpDelete("{id:guid}")]
-    // [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Delete(Guid id)
     {

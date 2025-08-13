@@ -2,6 +2,7 @@
 using BookShop.Application.DTOs.Res;
 using BookShop.Application.Interface;
 using BookShop.Domain.Common;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BookShop.API.Controllers;
@@ -11,6 +12,7 @@ namespace BookShop.API.Controllers;
 public class AuthorController(IAuthorService authorService) : Controller
 {
     [HttpGet]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(GlobalResponse<IEnumerable<UserRes>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAlls()
     {
@@ -19,6 +21,7 @@ public class AuthorController(IAuthorService authorService) : Controller
     }
     
     [HttpGet("{id:guid}")]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(GlobalResponse<AuthorRes>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById([FromRoute] Guid id)
@@ -28,6 +31,7 @@ public class AuthorController(IAuthorService authorService) : Controller
     }
     
     [HttpPut("profile/{id:guid}")]
+    [Authorize(Roles = "Admin")]
     [Consumes("multipart/form-data")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -41,6 +45,7 @@ public class AuthorController(IAuthorService authorService) : Controller
     }
     
     [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
