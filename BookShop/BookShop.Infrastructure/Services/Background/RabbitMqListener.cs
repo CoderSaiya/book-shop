@@ -2,7 +2,7 @@
 using System.Text.Json;
 using BookShop.Domain.Models;
 using BookShop.Domain.Specifications;
-using BookShop.Infrastructure.Services.Interfaces;
+using BookShop.Application.Interface;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;

@@ -1,6 +1,6 @@
 ﻿using BookShop.Domain.Models;
 
-namespace BookShop.Infrastructure.Services.Interfaces;
+namespace BookShop.Application.Interface;
 
 public interface IMailSender
 {

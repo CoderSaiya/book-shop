@@ -1,7 +1,6 @@
-﻿using System.Net.Mail;
-using BookShop.Domain.Models;
+﻿using BookShop.Domain.Models;
 using BookShop.Domain.Specifications;
-using BookShop.Infrastructure.Services.Interfaces;
+using BookShop.Application.Interface;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using SmtpClient = MailKit.Net.Smtp.SmtpClient;
