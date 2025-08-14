@@ -52,7 +52,61 @@ public class BookRepository(AppDbContext context) : GenericRepository<Book>(cont
 
         return books;
     }
-    
+
+    public async Task<IReadOnlyList<Book>> GetTrendingAsync(int days = 30, int limit = 12)
+    {
+        var since = DateTime.UtcNow.AddDays(-Math.Max(1, days));
+        
+        // Bán trong window days với đơn đã Paid
+        var soldQuery =
+            from oi in _context.OrderItems
+            join o in _context.Orders on oi.OrderId equals o.Id
+            where o.PaymentStatus == PaymentStatus.Paid && o.CreatedAt >= since
+            group oi by oi.BookId into g
+            select new
+            {
+                BookId = g.Key,
+                SoldQty = g.Sum(x => x.Quantity),
+                Revenue = g.Sum(x => x.TotalPrice)
+            };
+
+        // Review
+        var reviewQuery =
+            from r in _context.Reviews
+            group r by r.BookId into g
+            select new
+            {
+                BookId = g.Key,
+                AvgRating = g.Average(x => (double)x.Rating),
+                ReviewCount = g.Count()
+            };
+
+        // Join + tính điểm
+        var q =
+            from b in _context.Books
+            
+            join s in soldQuery on b.Id equals s.BookId into sj
+            from s in sj.DefaultIfEmpty()
+            join rv in reviewQuery on b.Id equals rv.BookId into rj
+            from rv in rj.DefaultIfEmpty()
+            let soldQty = (int?)s.SoldQty      ?? 0
+            let avgRating = (double?)rv.AvgRating ?? 0.0
+            let reviewCnt = (int?)rv.ReviewCount ?? 0
+            
+            let score = (soldQty * 3.0) + (avgRating * 2.0) + (reviewCnt > 0 ? Math.Log10(reviewCnt + 1.0) : 0.0)
+            orderby score descending, b.PublishedDate descending
+            
+            select b;
+
+        return await q
+            .Include(b => b.Author)
+            .Include(b => b.Publisher)
+            .Include(b => b.Category)
+            .AsNoTracking()
+            .Take(limit)
+            .ToListAsync();
+    }
+
     private static string EscapeLike(string s) =>
         s.Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]");
     
