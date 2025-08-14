@@ -10,73 +10,33 @@ using BookShop.Domain.ValueObjects;
 
 namespace BookShop.Application.Services;
 
-public class PublisherService(IUnitOfWork uow) : IPublisherService
+public class PublisherService(
+    IUnitOfWork uow,
+    IEntityLocalizer lz
+    ) : IPublisherService
 {
-    public async Task<IEnumerable<PublisherRes>> GetAll() =>
-        (await uow.Publishers.ListAsync()).Select(p => new PublisherRes(
-            PublisherId: p.Id,
-            PublisherName: p.Name,
-            Address: new AddressDto(
-                p.Address.Street,
-                p.Address.Ward,
-                p.Address.District,
-                p.Address.CityOrProvince
-                ),
-            Website: p.Website,
-            Books: p.Books.Select(b => new BookRes(
-                BookId: b.Id,
-                AuthorName: p.Name,
-                PublisherName: b.Publisher.Name,
-                Title: b.Title,
-                Description: b.Description ?? string.Empty,
-                Stock: b.Stock,
-                Price: b.Price,
-                Images: b.CoverImage.ToList(),
-                PublishedDate: b.PublishedDate.ToString("dd/MM/yyyy"),
-                IsSold: b.Stock <= 0,
-                Category: new CategoryDto(
-                    Id: b.CategoryId,
-                    Name: b.Category.Name
-                )
-            ))
-        ));
+    private const string SourceLang = "vi";
+    private const string TargetLang = "en";
+
+    public async Task<IEnumerable<PublisherRes>> GetAll()
+    {
+        var publishers = await uow.Publishers.ListAsync();
+
+        var results = new List<PublisherRes>();
+        foreach (var p in publishers)
+            results.Add(await MapAsync(p));
+
+        return results;
+    }
 
     public async Task<PublisherRes> GetById(Guid id)
     {
-        ValidationHelper.Validate(
-            (id == Guid.Empty, "Id nhà xuất bản không được để trống")
-        );
+        ValidationHelper.Validate((id == Guid.Empty, "Id nhà xuất ba không được để trống"));
 
         var p = await uow.Publishers.GetByIdAsync(id)
                 ?? throw new NotFoundException("Publisher", id.ToString());
-        
-        return new PublisherRes(
-            PublisherId: p.Id,
-            PublisherName: p.Name,
-            Address: new AddressDto(
-                p.Address.Street,
-                p.Address.Ward,
-                p.Address.District,
-                p.Address.CityOrProvince
-            ),
-            Website: p.Website,
-            Books: p.Books.Select(b => new BookRes(
-                BookId: b.Id,
-                AuthorName: p.Name,
-                PublisherName: b.Publisher.Name,
-                Title: b.Title,
-                Description: b.Description ?? string.Empty,
-                Stock: b.Stock,
-                Price: b.Price,
-                Images: b.CoverImage.ToList(),
-                PublishedDate: b.PublishedDate.ToString("dd/MM/yyyy"),
-                IsSold: b.Stock <= 0,
-                Category: new CategoryDto(
-                    Id: b.CategoryId,
-                    Name: b.Category.Name
-                )
-            ))
-        );
+
+        return await MapAsync(p);
     }
 
     public async Task Create(CreatePublisherReq req)
@@ -138,5 +98,63 @@ public class PublisherService(IUnitOfWork uow) : IPublisherService
         
         await uow.Publishers.DeleteAsync(id);
         await uow.SaveAsync();
+    }
+    
+    private async Task<PublisherRes> MapAsync(Publisher p)
+    {
+        var books = new List<BookRes>(p.Books.Count);
+        foreach (var b in p.Books)
+            books.Add(await MapBookAsync(b, p.Name));
+        
+        return new PublisherRes(
+            PublisherId: p.Id,
+            PublisherName: p.Name,
+            Address: new AddressDto(
+                p.Address.Street,
+                p.Address.Ward,
+                p.Address.District,
+                p.Address.CityOrProvince
+            ),
+            Website: p.Website,
+            Books: books
+        );
+    }
+
+    private async Task<BookRes> MapBookAsync(Book b, string publNameFallback)
+    {
+        var title = await LocalizeRequiredAsync("Book", b.Id.ToString(), "Title", b.Title);
+        var desc  = await LocalizeOptionalAsync("Book", b.Id.ToString(), "Description", b.Description);
+        var cat   = await LocalizeRequiredAsync("Category", b.CategoryId.ToString(), "Name", b.Category.Name);
+
+        return new BookRes(
+            BookId: b.Id,
+            AuthorName: b.Author.Name,
+            PublisherName: publNameFallback,
+            Title: title,
+            Description: desc,
+            Stock: b.Stock,
+            Price: b.Price,
+            Images: b.CoverImage.ToList(),
+            PublishedDate: b.PublishedDate.ToString("dd/MM/yyyy"),
+            IsSold: b.Stock <= 0,
+            Category: new CategoryDto(
+                b.CategoryId,
+                cat)
+        );
+    }
+    
+    private async Task<LocalizedTextDto> LocalizeRequiredAsync(string entityType, string entityKey, string field, string viValue)
+    {
+        var en = await lz.LocalizeFieldAsync(entityType, entityKey, field, viValue, SourceLang, TargetLang);
+        return new LocalizedTextDto(Vi: viValue, En: en);
+    }
+
+    private async Task<LocalizedTextDto?> LocalizeOptionalAsync(string entityType, string entityKey, string field, string? viValue)
+    {
+        if (string.IsNullOrWhiteSpace(viValue))
+            return new LocalizedTextDto();
+
+        var en = await lz.LocalizeFieldAsync(entityType, entityKey, field, viValue, SourceLang, TargetLang);
+        return new LocalizedTextDto(Vi: viValue, En: en);
     }
 }

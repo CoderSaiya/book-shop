@@ -3,6 +3,6 @@
 public record AuthorRes(
     Guid AuthorId,
     string AuthorName,
-    string? Bio,
+    LocalizedTextDto? Bio,
     IEnumerable<BookRes> Books
     );

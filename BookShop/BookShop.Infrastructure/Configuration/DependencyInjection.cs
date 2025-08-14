@@ -53,6 +53,8 @@ public static class DependencyInjection
         services.AddScoped<IReviewRepository, ReviewRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<ICartRepository, CartRepository>();
+        services.AddScoped<ITranslationStore, EfTranslationStore>();
+        services.AddScoped<IEntityLocalizer, EntityLocalizer>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         services.AddScoped<IAuthService, AuthService>();
@@ -63,7 +65,10 @@ public static class DependencyInjection
         services.AddScoped<IReviewService, ReviewService>();
         services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped<ICartService, CartService>();
+        services.AddScoped<IBookService, BookService>();
         services.AddSingleton<IMailSender, EmailSender>();
+        services.AddScoped<ITextHasher, Sha256TextHasher>();
+        services.AddHttpClient<ITranslator, AzureTranslator>();
         
         services.AddHostedService<RabbitMqListener>();
         

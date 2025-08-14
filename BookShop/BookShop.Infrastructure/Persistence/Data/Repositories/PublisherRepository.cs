@@ -16,5 +16,8 @@ public class PublisherRepository(AppDbContext context) : GenericRepository<Publi
     public override async Task<IEnumerable<Publisher>> ListAsync() =>
         await _context.Publishers
             .Include(p => p.Books)
+            .ThenInclude(b => b.Author)
+            .Include(p => p.Books)
+            .ThenInclude(b => b.Category)
             .ToListAsync();
 }

@@ -20,6 +20,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Order> Orders { get; set; }
     public DbSet<OrderItem> OrderItems { get; set; }
     public DbSet<Review> Reviews { get; set; }
+    public DbSet<TranslationEntry> Translations { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -153,5 +154,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .HasIndex(r => new { r.UserId, r.BookId })
             .IsUnique()
             .HasDatabaseName("IX_Review_User_Book");
+        
+        modelBuilder.Entity<TranslationEntry>()
+            .HasIndex(x => new { x.EntityType, x.EntityKey, x.Field, x.TargetLang, x.SourceHash })
+            .IsUnique();
     }
 }
