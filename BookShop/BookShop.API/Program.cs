@@ -2,7 +2,9 @@ using System.Security.Claims;
 using System.Text;
 using BookShop.Domain.Specifications;
 using BookShop.Infrastructure.Configuration;
+using BookShop.Infrastructure.Persistence.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
@@ -98,6 +100,10 @@ builder.Services.Configure<RabbitMqSettings>(builder.Configuration.GetSection("R
 builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
 
 builder.Services.AddApplication();
+builder.Services.AddPooledDbContextFactory<AppDbContext>(options =>
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("Default"));
+});
 builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddAuthorization();
