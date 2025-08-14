@@ -22,6 +22,15 @@ public class BookController(IBookService bookService) : Controller
         var books = await bookService.Search(keyword, page, pageSize);
         return Ok(GlobalResponse<IEnumerable<BookRes>>.Success(books));
     }
+
+    [HttpGet("trending")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(GlobalResponse<IEnumerable<BookRes>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetTrending([FromQuery] int days = 30, [FromQuery] int limit = 12)
+    {
+        var books = await bookService.GetTrendingAsync(days, limit);
+        return Ok(GlobalResponse<IEnumerable<BookRes>>.Success(books));
+    }
     
     [HttpGet("{id:guid}")]
     [AllowAnonymous]

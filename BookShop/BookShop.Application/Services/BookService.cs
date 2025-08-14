@@ -28,7 +28,18 @@ public class BookService(
 
         return results;
     }
-    
+
+    public async Task<IReadOnlyList<BookRes>> GetTrendingAsync(int days = 30, int limit = 12)
+    {
+        var books = await unitOfWork.Books.GetTrendingAsync(days, limit);
+
+        var list = new List<BookRes>(books.Count);
+        foreach (var b in books)
+            list.Add(await MapAsync(b));
+
+        return list;
+    }
+
     public async Task<BookRes> GetById(Guid bookId)
     {
         ValidationHelper.Validate((bookId == Guid.Empty, "Id của sách không được để trống."));
