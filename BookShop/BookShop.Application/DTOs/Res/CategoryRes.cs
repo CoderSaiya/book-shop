@@ -2,8 +2,8 @@
 
 public record CategoryRes(
     Guid Id,
-    string Name,
-    string? Description,
+    LocalizedTextDto Name,
+    LocalizedTextDto? Description,
     string? Icon,
     int BookCount,
     DateTime CreatedAt);

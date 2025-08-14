@@ -16,5 +16,8 @@ public class AuthorRepository(AppDbContext context) : GenericRepository<Author>(
     public override async Task<IEnumerable<Author>> ListAsync() =>
         await _context.Authors
             .Include(a => a.Books)
+            .ThenInclude(b => b.Publisher)
+            .Include(a => a.Books)
+            .ThenInclude(b => b.Category)
             .ToListAsync();
 }

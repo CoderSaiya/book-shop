@@ -10,50 +10,33 @@ using Microsoft.AspNetCore.Http;
 
 namespace BookShop.Application.Services;
 
-public class BookService(IUnitOfWork unitOfWork) : IBookService
+public class BookService(
+    IUnitOfWork unitOfWork,
+    IEntityLocalizer lz
+    ) : IBookService
 {
-    public async Task<IEnumerable<BookRes>> Search(string keyword = "", int page = 1, int pageSize = 50) => 
-        (await unitOfWork.Books.SearchAsync(keyword, pageSize, page)).Select(b => new BookRes(
-            BookId: b.Id,
-            AuthorName: b.Author.Name,
-            PublisherName: b.Publisher.Name,
-            Title: b.Title,
-            Description: b.Description ?? "",
-            Stock: b.Stock,
-            Price: b.Price,
-            Images: b.CoverImage.ToList(),
-            PublishedDate: b.PublishedDate.ToString("dd/MM/yyyy"),
-            IsSold: b.Stock <= 0,
-            Category: new CategoryDto(
-                Id: b.CategoryId,
-                Name: b.Category.Name
-            )));
+    private const string SourceLang = "vi";
+    private const string TargetLang = "en";
+    
+    public async Task<IEnumerable<BookRes>> Search(string keyword = "", int page = 1, int pageSize = 50)
+    {
+        var books = await unitOfWork.Books.SearchAsync(keyword, pageSize, page);
+
+        var results = new List<BookRes>();
+        foreach (var b in books)
+            results.Add(await MapAsync(b));
+
+        return results;
+    }
     
     public async Task<BookRes> GetById(Guid bookId)
     {
-        ValidationHelper.Validate(
-            (bookId == Guid.Empty, "Id của sách không được để trống.")
-        );
+        ValidationHelper.Validate((bookId == Guid.Empty, "Id của sách không được để trống."));
 
         var b = await unitOfWork.Books.GetByIdAsync(bookId)
                 ?? throw new NotFoundException("Sách", bookId.ToString());
 
-        return new BookRes(
-            BookId: b.Id,
-            AuthorName: b.Author.Name,
-            PublisherName: b.Publisher.Name,
-            Title: b.Title,
-            Description: b.Description ?? string.Empty,
-            Stock: b.Stock,
-            Price: b.Price,
-            Images: b.CoverImage.ToList(),
-            PublishedDate: b.PublishedDate.ToString("dd/MM/yyyy"),
-            IsSold: b.Stock <= 0,
-            Category: new CategoryDto(
-                Id: b.CategoryId,
-                Name: b.Category.Name
-            )
-        );
+        return await MapAsync(b);
     }
 
     public async Task Create(CreateBookReq request)
@@ -172,5 +155,41 @@ public class BookService(IUnitOfWork unitOfWork) : IBookService
         using var ms = new MemoryStream();
         await file.CopyToAsync(ms);
         return ms.ToArray();
+    }
+    
+    private async Task<BookRes> MapAsync(Book b)
+    {
+        var title = await LocalizeRequiredAsync("Book", b.Id.ToString(), "Title", b.Title);
+        var desc = await LocalizeOptionalAsync("Book", b.Id.ToString(), "Description", b.Description);
+        var cat = await LocalizeRequiredAsync("Category", b.CategoryId.ToString(), "Name", b.Category.Name);
+
+        return new BookRes(
+            BookId: b.Id,
+            AuthorName: b.Author.Name,
+            PublisherName: b.Publisher.Name,
+            Title: title,
+            Description: desc,
+            Stock: b.Stock,
+            Price: b.Price,
+            Images: b.CoverImage.ToList(),
+            PublishedDate: b.PublishedDate.ToString("dd/MM/yyyy"),
+            IsSold: b.Stock <= 0,
+            Category: new CategoryDto(b.CategoryId, cat)
+        );
+    }
+
+    private async Task<LocalizedTextDto> LocalizeRequiredAsync(string entityType, string entityKey, string field, string viValue)
+    {
+        var en = await lz.LocalizeFieldAsync(entityType, entityKey, field, viValue, SourceLang, TargetLang);
+        return new LocalizedTextDto(Vi: viValue, En: en);
+    }
+
+    private async Task<LocalizedTextDto> LocalizeOptionalAsync(string entityType, string entityKey, string field, string? viValue)
+    {
+        if (string.IsNullOrWhiteSpace(viValue))
+            return new LocalizedTextDto();
+
+        var en = await lz.LocalizeFieldAsync(entityType, entityKey, field, viValue, SourceLang, TargetLang);
+        return new LocalizedTextDto(Vi: viValue, En: en);
     }
 }

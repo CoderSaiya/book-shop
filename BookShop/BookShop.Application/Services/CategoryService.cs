@@ -1,4 +1,5 @@
-﻿using BookShop.Application.DTOs.Req;
+﻿using BookShop.Application.DTOs;
+using BookShop.Application.DTOs.Req;
 using BookShop.Application.DTOs.Res;
 using BookShop.Application.Interface;
 using BookShop.Domain.Common;
@@ -9,7 +10,8 @@ using FluentValidation;
 namespace BookShop.Application.Services;
 
 public class CategoryService(
-    IUnitOfWork uow
+    IUnitOfWork uow,
+    IEntityLocalizer lz
     ) : ICategoryService
 {
     public async Task<CategoryRes> CreateAsync(CreateCategoryReq req)
@@ -27,7 +29,7 @@ public class CategoryService(
         await uow.Categories.AddAsync(c);
         await uow.SaveAsync();
         
-        return Map(c);
+        return await MapAsync(c);
     }
 
     public async Task<CategoryRes> UpdateAsync(Guid id, UpdateCategoryReq req)
@@ -47,7 +49,7 @@ public class CategoryService(
         await uow.Categories.UpdateAsync(c);
         await uow.SaveAsync();
         
-        return Map(c);
+        return await MapAsync(c);
     }
 
     public async Task UpdateIconAsync(Guid id, string? icon)
@@ -70,24 +72,55 @@ public class CategoryService(
         var c = await uow.Categories.GetByIdAsync(id) 
                 ?? throw new NotFoundException("Category", id.ToString());
         
-        return Map(c);
+        return await MapAsync(c);
     }
 
     public async Task<IReadOnlyList<CategoryRes>> GetAllAsync()
     {
         var list = await uow.Categories.GetAllWithBookCountAsync();
         
-        return list
-            .Select(Map)
-            .ToList();
+        var results = await Task.WhenAll(list.Select(MapAsync));
+        return results.ToList();
     }
     
-    private static CategoryRes Map(Category c)
-        => new CategoryRes(
+    private async Task<CategoryRes> MapAsync(Category c)
+    {
+        // Khóa cache: EntityType="Category", EntityKey: ưu tiên Slug nếu có, tạm dùng Id
+        var enName = await lz.LocalizeFieldAsync(
+            entityType: "Category",
+            entityKey: c.Id.ToString(),
+            field: "Name",
+            sourceText: c.Name, 
+            sourceLang: "vi",
+            targetLang: "en");
+
+        string? enDesc = null;
+        if (!string.IsNullOrWhiteSpace(c.Description))
+        {
+            enDesc = await lz.LocalizeFieldAsync(
+                entityType: "Category",
+                entityKey: c.Id.ToString(),
+                field: "Description",
+                sourceText: c.Description,
+                sourceLang: "vi",
+                targetLang: "en");
+        }
+        
+        var nameDto = new LocalizedTextDto(
+            Vi: c.Name,
+            En: enName
+        );
+        var descDto = new LocalizedTextDto(
+            Vi: c.Description ?? "",
+            En: enDesc ?? "");
+
+        return new CategoryRes(
             c.Id,
-            c.Name,
-            c.Description,
+            nameDto,
+            descDto,
             c.Icon,
             c.BookCount,
-            c.CreatedAt);
+            c.CreatedAt
+        );
+    }
 }
