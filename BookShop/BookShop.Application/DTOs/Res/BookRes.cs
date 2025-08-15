@@ -8,6 +8,8 @@ public record BookRes(
     LocalizedTextDto? Description,
     int Stock,
     decimal Price,
+    int Sale,
+    decimal CurrentPrice,
     List<string> Images,
     string PublishedDate,
     bool IsSold,

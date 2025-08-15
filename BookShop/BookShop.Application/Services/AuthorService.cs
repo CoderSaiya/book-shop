@@ -119,6 +119,8 @@ public class AuthorService(
             Description: desc,
             Stock: b.Stock,
             Price: b.Price,
+            Sale: b.Sale,
+            CurrentPrice: b.CurrentPrice,
             Images: b.CoverImage.ToList(),
             PublishedDate: b.PublishedDate.ToString("dd/MM/yyyy"),
             IsSold: b.Stock <= 0,
