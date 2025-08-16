@@ -218,10 +218,10 @@ public class AuthService(
         
         return newAccessToken;
     }
-    
+
     private static string MapRole(User baseUser) => baseUser switch
     {
-        Admin  => "Admin",
+        Admin => "Admin",
         Client => "Client",
         _ => "User"
     };
@@ -231,10 +231,11 @@ public class AuthService(
         return new UserRes(
             user.Id,
             user.Email.Address,
-            (user as Client)?.Profile.Name?.ToString() ?? string.Empty,
-            (user as Client)?.Profile.Phone?.ToString() ?? string.Empty,
-            (user as Client)?.Profile.Address?.ToString() ?? string.Empty,
-            (user as Client)?.Profile.Avatar ?? string.Empty,
+            user.Profile.Name?.ToString() ?? string.Empty,
+            user.Profile.Phone?.ToString() ?? string.Empty,
+            user.Profile.Address?.ToString() ?? string.Empty,
+            user.Profile.Avatar ?? string.Empty,
+            Dob: user.Profile.DateOfBirth ?? null,
             MapRole(user),
             user.CreatedAt
         );

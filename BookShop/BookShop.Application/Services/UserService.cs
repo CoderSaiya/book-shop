@@ -20,6 +20,7 @@ public class UserService(IUnitOfWork uow) : IUserService
             Phone: u.Profile.Phone?.ToString() ?? "Unknown",
             Address: u.Profile.Address?.ToString() ?? "Unknown",
             Avatar: u.Profile.Avatar ?? null,
+            Dob: u.Profile.DateOfBirth ?? null,
             Role: (u is Admin) ? "Admin" : "Client",
             CreatedAt: u.CreatedAt
         ));
@@ -41,6 +42,7 @@ public class UserService(IUnitOfWork uow) : IUserService
             Phone: u.Profile.Phone?.ToString() ?? "Unknown",
             Address: u.Profile.Address?.ToString() ?? "Unknown",
             Avatar: u.Profile.Avatar ?? null,
+            Dob: u.Profile.DateOfBirth ?? null,
             Role: (u is Admin) ? "Admin" : "Client",
             CreatedAt: u.CreatedAt
         );
@@ -88,7 +90,7 @@ public class UserService(IUnitOfWork uow) : IUserService
         if (req.Avatar is not null && req.Avatar.Length > 0)
         {
             var bytes = await ToByteArrayAsync(req.Avatar);
-            profile.Avatar = Convert.ToBase64String(bytes);
+            profile.Avatar = $"data:{req.Avatar.ContentType};base64,{Convert.ToBase64String(bytes)}";
         }
         
         user.Profile = profile;
