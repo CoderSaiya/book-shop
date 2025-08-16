@@ -50,6 +50,19 @@ public class BookService(
         return await MapAsync(b);
     }
 
+    public async Task<IReadOnlyList<BookRes>> GetRelatedAsync(Guid bookId, int days = 180, int limit = 12)
+    {
+        ValidationHelper.Validate((bookId == Guid.Empty, "Id của sách không được để trống."));
+
+        var books = await unitOfWork.Books.GetRelatedAsync(bookId, days, limit);
+
+        var list = new List<BookRes>(books.Count);
+        foreach (var b in books)
+            list.Add(await MapAsync(b));
+
+        return list;
+    }
+
     public async Task Create(CreateBookReq request)
     {
         ValidationHelper.Validate(
