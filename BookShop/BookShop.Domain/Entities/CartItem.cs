@@ -5,14 +5,14 @@ namespace BookShop.Domain.Entities
 {
     public class CartItem
     {
-        [Key]
-        public Guid Id { get; set; }
-
         [Required]
         public Guid CartId { get; set; }
+        public Cart Cart { get; set; } = null!;
 
         [Required]
         public Guid BookId { get; set; }
+        [ForeignKey("BookId")]
+        public Book Book { get; set; } = null!;
 
         [Required]
         [Range(1, int.MaxValue, ErrorMessage = "Quantity must be greater than 0")]
@@ -25,10 +25,6 @@ namespace BookShop.Domain.Entities
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
-
-        // Navigation properties
-        public Cart Cart { get; set; } = null!;
-        public Book Book { get; set; } = null!;
 
         // Calculated property
         [NotMapped]

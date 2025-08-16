@@ -28,7 +28,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.Entity<User>(entity =>
         {
             entity.HasDiscriminator<string>("Role")
-                .HasValue<User>("Client")
+                .HasValue<Client>("Client")
                 .HasValue<Admin>("Admin");
             
             entity.OwnsOne(u => u.Email, e =>
@@ -86,24 +86,48 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.Entity<RefreshToken>()
             .HasKey(r => new { r.UserId, r.Token });
         
-        // New entity configurations
-        modelBuilder.Entity<Cart>()
-            .HasOne(c => c.User)
-            .WithOne(u => u.Cart)
+        modelBuilder.Entity<User>()
+            .HasOne(u => u.Cart)
+            .WithOne(c => c.User)
             .HasForeignKey<Cart>(c => c.UserId)
+            .IsRequired()
             .OnDelete(DeleteBehavior.Cascade);
+        
+        modelBuilder.Entity<Cart>(e =>
+        {
+            e.HasKey(c => c.UserId);
+            e.Property(c => c.IsActive).HasDefaultValue(true);
+        });
+        
+        modelBuilder.Entity<CartItem>(e =>
+        {
+            e.HasKey(ci => new { ci.CartId, ci.BookId });
+
+            e.HasOne(ci => ci.Cart)
+                .WithMany(c => c.CartItems)
+                .HasForeignKey(ci => ci.CartId)
+                .HasPrincipalKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasOne(ci => ci.Book)
+                .WithMany() 
+                .HasForeignKey(ci => ci.BookId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            e.Property(ci => ci.UnitPrice).HasColumnType("decimal(18,2)");
+        });
             
-        modelBuilder.Entity<CartItem>()
-            .HasOne(ci => ci.Cart)
-            .WithMany(c => c.CartItems)
-            .HasForeignKey(ci => ci.CartId)
-            .OnDelete(DeleteBehavior.Cascade);
-            
-        modelBuilder.Entity<CartItem>()
-            .HasOne(ci => ci.Book)
-            .WithMany(b => b.CartItems)
-            .HasForeignKey(ci => ci.BookId)
-            .OnDelete(DeleteBehavior.Restrict);
+        // modelBuilder.Entity<CartItem>()
+        //     .HasOne(ci => ci.Cart)
+        //     .WithMany(c => c.CartItems)
+        //     .HasForeignKey(ci => ci.CartId)
+        //     .OnDelete(DeleteBehavior.Cascade);
+        //     
+        // modelBuilder.Entity<CartItem>()
+        //     .HasOne(ci => ci.Book)
+        //     .WithMany(b => b.CartItems)
+        //     .HasForeignKey(ci => ci.BookId)
+        //     .OnDelete(DeleteBehavior.Restrict);
             
         modelBuilder.Entity<Order>()
             .HasOne(o => o.User)

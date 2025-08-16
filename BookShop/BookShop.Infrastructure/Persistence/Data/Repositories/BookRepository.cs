@@ -53,6 +53,15 @@ public class BookRepository(AppDbContext context) : GenericRepository<Book>(cont
         return books;
     }
 
+    public override Task<Book?> GetByIdAsync(Guid id)
+    {
+        return _context.Books
+            .Include(b => b.Author)
+            .Include(b => b.Publisher)
+            .Include(b => b.Category)
+            .FirstOrDefaultAsync(b => b.Id == id);
+    }
+
     public async Task<IReadOnlyList<Book>> GetTrendingAsync(int days = 30, int limit = 12)
     {
         var since = DateTime.UtcNow.AddDays(-Math.Max(1, days));

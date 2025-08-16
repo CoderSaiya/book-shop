@@ -61,7 +61,7 @@ public class OrderService(
 
         // Deactivate cart sau khi đặt hàng
         var cart = await uow.Carts.GetActiveCartByUserAsync(userId, includeItems: true);
-        if (cart is not null) await uow.Carts.DeactivateAsync(cart.Id);
+        if (cart is not null) await uow.Carts.DeactivateAsync(cart.UserId);
 
         // Email xác nhận
         var mm = new EmailMessage
