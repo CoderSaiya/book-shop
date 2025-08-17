@@ -53,6 +53,15 @@ public class BookRepository(AppDbContext context) : GenericRepository<Book>(cont
         return books;
     }
 
+    public override Task<Book?> GetByIdAsync(Guid id)
+    {
+        return _context.Books
+            .Include(b => b.Author)
+            .Include(b => b.Publisher)
+            .Include(b => b.Category)
+            .FirstOrDefaultAsync(b => b.Id == id);
+    }
+
     public async Task<IReadOnlyList<Book>> GetTrendingAsync(int days = 30, int limit = 12)
     {
         var since = DateTime.UtcNow.AddDays(-Math.Max(1, days));
@@ -149,4 +158,74 @@ public class BookRepository(AppDbContext context) : GenericRepository<Book>(cont
         await _context.Books
             .Where(b => b.PublisherId == publisherId)
             .ToListAsync();
+
+    public async Task<IReadOnlyList<Book>> GetRelatedAsync(Guid bookId, int days = 180, int limit = 12)
+    {
+        if (bookId == Guid.Empty) return Array.Empty<Book>();
+        
+        var current = await _context.Books
+            .AsNoTracking()
+            .Where(b => b.Id == bookId)
+            .Select(b => new { b.Id, b.AuthorId, b.CategoryId })
+            .FirstOrDefaultAsync();
+
+        if (current is null) return Array.Empty<Book>();
+
+        var since = DateTime.UtcNow.AddDays(-Math.Max(1, days));
+
+        // Các sách được mua chung (co-purchase) với bookId trong các đơn Paid gần đây
+        var coPurchaseQuery =
+            from oi in _context.OrderItems
+            join o in _context.Orders on oi.OrderId equals o.Id
+            where o.PaymentStatus == PaymentStatus.Paid && o.CreatedAt >= since
+            join oi2 in _context.OrderItems on oi.OrderId equals oi2.OrderId
+            where oi.BookId == bookId && oi2.BookId != bookId
+            group oi2 by oi2.BookId into g
+            select new
+            {
+                BookId = g.Key,
+                CoPurchaseQty = g.Sum(x => x.Quantity)
+            };
+
+        // Thống kê review để tăng/giảm điểm
+        var reviewStatsQuery =
+            from r in _context.Reviews
+            group r by r.BookId into g
+            select new
+            {
+                BookId = g.Key,
+                AvgRating = g.Average(x => (double)x.Rating),
+                ReviewCount = g.Count()
+            };
+
+        // Hợp nhất, tính điểm và sắp xếp
+        var q =
+            from b in _context.Books
+            where b.Id != bookId
+            join cp in coPurchaseQuery on b.Id equals cp.BookId into cpj
+            from cp in cpj.DefaultIfEmpty()
+            join rv in reviewStatsQuery on b.Id equals rv.BookId into rvj
+            from rv in rvj.DefaultIfEmpty()
+            let sameAuthor = b.AuthorId == current.AuthorId ? 1 : 0
+            let sameCategory = b.CategoryId == current.CategoryId ? 1 : 0
+            let co = (int?)cp.CoPurchaseQty ?? 0
+            let rating = (double?)rv.AvgRating ?? 0.0
+            let rcount = (int?)rv.ReviewCount ?? 0
+            // Trọng số: co-purchase (5), cùng tác giả (3), cùng thể loại (1.5), rating (0.5), log(reviewCount)
+            let score = (co * 5.0)
+                        + (sameAuthor * 3.0)
+                        + (sameCategory * 1.5)
+                        + (rating * 0.5)
+                        + (rcount > 0 ? Math.Log10(rcount + 1.0) : 0.0)
+            orderby score descending, sameAuthor descending, b.PublishedDate descending
+            select b;
+
+        return await q
+            .Include(b => b.Author)
+            .Include(b => b.Publisher)
+            .Include(b => b.Category)
+            .AsNoTracking()
+            .Take(limit)
+            .ToListAsync();
+    }
 }

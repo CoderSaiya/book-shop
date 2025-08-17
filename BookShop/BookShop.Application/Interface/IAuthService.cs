@@ -6,6 +6,7 @@ namespace BookShop.Application.Interface;
 
 public interface IAuthService
 {
+    Task<UserRes> GetCurrentUserAsync(Guid userId);
     Task RegisterAsync(RegisterReq req);
     Task<AuthRes> LoginAsync(LoginReq req);
     public string HashPassword(string password);

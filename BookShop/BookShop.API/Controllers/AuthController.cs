@@ -1,4 +1,6 @@
-﻿using BookShop.Application.DTOs.Req;
+﻿using System.Security.Claims;
+using BookShop.Application.DTOs.Req;
+using BookShop.Application.DTOs.Res;
 using BookShop.Application.Interface;
 using BookShop.Domain.Common;
 using Microsoft.AspNetCore.Authorization;
@@ -8,7 +10,10 @@ namespace BookShop.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class AuthController(IAuthService authService) : Controller
+public class AuthController(
+    IAuthService authService,
+    IHostEnvironment env
+) : Controller
 {
     [HttpPost("register")]
     [AllowAnonymous]
@@ -30,20 +35,23 @@ public class AuthController(IAuthService authService) : Controller
     public async Task<IActionResult> Login([FromForm] LoginReq req)
     {
         var res = await authService.LoginAsync(req);
-        
+
+        var isDev = env.IsDevelopment();
         Response.Cookies.Append("rt", res.RefreshToken, new CookieOptions
         {
             HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.Strict,
+            Secure = !isDev,
+            SameSite = isDev
+                ? SameSiteMode.Lax
+                : SameSiteMode.None,
             Expires = DateTimeOffset.UtcNow.AddDays(7)
         });
-        
-        return Ok(GlobalResponse<object>.Success(new { res.AccessToken }));
+
+        return Ok(GlobalResponse<AuthRes>.Success(res));
     }
-    
+
     [HttpPost("refresh-token")]
-    [Authorize]
+    [AllowAnonymous]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -51,7 +59,38 @@ public class AuthController(IAuthService authService) : Controller
     {
         var res = await authService.RefreshTokenAsync(refreshToken);
         if (res is null) return BadRequest(GlobalResponse<string>.Error("Refresh token expired or invalid."));
-        
+
         return Ok(GlobalResponse<object>.Success(new { AccessToken = res }));
+    }
+
+    [HttpPost("logout")]
+    [Authorize]
+    public IActionResult Logout()
+    {
+        var isDev = env.IsDevelopment();
+        Response.Cookies.Delete("rt", new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = !isDev,
+            SameSite = isDev
+                ? SameSiteMode.Lax
+                : SameSiteMode.None,
+            Path = "/"
+        });
+
+        return Ok(GlobalResponse<string>.Success("Đã đăng xuất"));
+    }
+
+    [HttpGet("me")]
+    [Authorize]
+    public async Task<IActionResult> Me()
+    {
+        var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdStr))
+            return Unauthorized(GlobalResponse<string>.Error("Missing sub/NameIdentifier.", StatusCodes.Status401Unauthorized));
+
+        var userId = Guid.Parse(userIdStr);
+        var dto = await authService.GetCurrentUserAsync(userId);
+        return Ok(GlobalResponse<UserRes>.Success(dto));
     }
 }

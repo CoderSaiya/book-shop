@@ -27,7 +27,6 @@ public class CartRepository(AppDbContext context) : GenericRepository<Cart>(cont
 
         cart = new Cart
         {
-            Id = Guid.NewGuid(),
             UserId = userId,
             IsActive = true
         };
@@ -40,7 +39,7 @@ public class CartRepository(AppDbContext context) : GenericRepository<Cart>(cont
     {
         var cart = await _context.Carts
             .Include(c => c.CartItems)
-            .FirstOrDefaultAsync(c => c.Id == cartId && c.IsActive);
+            .FirstOrDefaultAsync(c => c.UserId == cartId && c.IsActive);
         if (cart is null) return;
 
         var item = cart.CartItems.FirstOrDefault(i => i.BookId == bookId);
@@ -48,8 +47,7 @@ public class CartRepository(AppDbContext context) : GenericRepository<Cart>(cont
         {
             item = new CartItem
             {
-                Id = Guid.NewGuid(),
-                CartId = cart.Id,
+                CartId = cart.UserId,
                 BookId = bookId,
                 Quantity = Math.Max(1, quantity),
                 UnitPrice = unitPrice,
@@ -81,7 +79,7 @@ public class CartRepository(AppDbContext context) : GenericRepository<Cart>(cont
             .ExecuteDeleteAsync();
 
         var cart = await _context.Carts
-            .FirstOrDefaultAsync(c => c.Id == cartId);
+            .FirstOrDefaultAsync(c => c.UserId == cartId);
         if (cart is not null)
         {
             cart.UpdatedAt = DateTime.UtcNow;
@@ -90,7 +88,7 @@ public class CartRepository(AppDbContext context) : GenericRepository<Cart>(cont
 
     public async Task DeactivateAsync(Guid cartId)
     {
-        var cart = await _context.Carts.FirstOrDefaultAsync(c => c.Id == cartId);
+        var cart = await _context.Carts.FirstOrDefaultAsync(c => c.UserId == cartId);
         if (cart is null) return;
 
         cart.IsActive = false;

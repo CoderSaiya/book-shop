@@ -21,6 +21,13 @@ public class AuthService(
     IMailSender emailSender
     ) : IAuthService
 {
+    public async Task<UserRes> GetCurrentUserAsync(Guid userId)
+    {
+        var user = await unitOfWork.Users.GetByIdAsync(userId)
+                   ?? throw new KeyNotFoundException("User không tồn tại.");
+        return ToUserRes(user);
+    }
+
     public async Task RegisterAsync(RegisterReq req)
     {
         if (await unitOfWork.Users.EmailExistsAsync(req.Email))
@@ -133,7 +140,8 @@ public class AuthService(
             new Claim(ClaimTypes.Email, user.Email.ToString()),
             new Claim(ClaimTypes.Role, MapRole(user))
         };
-        Console.Write("CMM: " + user.GetType().ToString());
+        
+        var accessExpiresAt = DateTimeOffset.UtcNow.AddMinutes(30);
         var accessToken = GenerateAccessToken(claims);
         var refreshToken = GenerateRefreshToken();
 
@@ -145,8 +153,14 @@ public class AuthService(
         };
         await unitOfWork.Refreshes.AddAsync(rt);
         await unitOfWork.SaveAsync();
+        
+        var userDto = ToUserRes(user);
 
-        return new AuthRes(accessToken, refreshToken);
+        return new AuthRes(
+            accessToken,
+            refreshToken,
+            accessExpiresAt,
+            userDto);
     }
     
     public string HashPassword(string password)
@@ -204,11 +218,26 @@ public class AuthService(
         
         return newAccessToken;
     }
-    
+
     private static string MapRole(User baseUser) => baseUser switch
     {
-        Admin     => "Admin",
-        Client    => "Client",
-        _         => "User"
+        Admin => "Admin",
+        Client => "Client",
+        _ => "User"
     };
+    
+    private static UserRes ToUserRes(User user)
+    {
+        return new UserRes(
+            user.Id,
+            user.Email.Address,
+            user.Profile.Name?.ToString() ?? string.Empty,
+            user.Profile.Phone?.ToString() ?? string.Empty,
+            user.Profile.Address?.ToString() ?? string.Empty,
+            user.Profile.Avatar ?? string.Empty,
+            Dob: user.Profile.DateOfBirth ?? null,
+            MapRole(user),
+            user.CreatedAt
+        );
+    }
 }

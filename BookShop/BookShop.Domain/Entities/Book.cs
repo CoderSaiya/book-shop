@@ -32,6 +32,23 @@ public class Book
     [Column(TypeName = "decimal(18,2)")]
     [Range(0.01, double.MaxValue, ErrorMessage = "Price must be greater than 0")]
     public decimal Price { get; set; }
+    public int Sale { get; set; } = 0;
+    [NotMapped]
+    public decimal CurrentPrice {
+        get
+        {
+            var s = Sale switch
+            {
+                < 0 => 0,
+                > 100 => 100,
+                _ => Sale
+            };
+            
+            var after = Price * (100m - s) / 100m;
+            
+            return decimal.Round(after, 2, MidpointRounding.AwayFromZero);
+        }
+    }
 
     [ForeignKey("CategoryId")]
     public Guid CategoryId { get; set; }

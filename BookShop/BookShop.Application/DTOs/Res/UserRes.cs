@@ -7,6 +7,7 @@ public record UserRes(
     string Phone,
     string Address,
     string? Avatar,
+    DateOnly? Dob,
     string Role,
     DateTime CreatedAt
     );

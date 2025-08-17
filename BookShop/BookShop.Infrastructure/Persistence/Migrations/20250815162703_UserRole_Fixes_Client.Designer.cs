@@ -4,6 +4,7 @@ using BookShop.Infrastructure.Persistence.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BookShop.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250815162703_UserRole_Fixes_Client")]
+    partial class UserRole_Fixes_Client
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -99,9 +102,7 @@ namespace BookShop.Infrastructure.Persistence.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<bool>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
+                        .HasColumnType("bit");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -113,13 +114,14 @@ namespace BookShop.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("BookShop.Domain.Entities.CartItem", b =>
                 {
-                    b.Property<Guid>("CartId")
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("BookId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("BookId1")
+                    b.Property<Guid>("CartId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -134,11 +136,11 @@ namespace BookShop.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.HasKey("CartId", "BookId");
+                    b.HasKey("Id");
 
                     b.HasIndex("BookId");
 
-                    b.HasIndex("BookId1");
+                    b.HasIndex("CartId");
 
                     b.ToTable("CartItems");
                 });
@@ -549,14 +551,10 @@ namespace BookShop.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("BookShop.Domain.Entities.CartItem", b =>
                 {
                     b.HasOne("BookShop.Domain.Entities.Book", "Book")
-                        .WithMany()
+                        .WithMany("CartItems")
                         .HasForeignKey("BookId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.HasOne("BookShop.Domain.Entities.Book", null)
-                        .WithMany("CartItems")
-                        .HasForeignKey("BookId1");
 
                     b.HasOne("BookShop.Domain.Entities.Cart", "Cart")
                         .WithMany("CartItems")

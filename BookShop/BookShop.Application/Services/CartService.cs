@@ -24,10 +24,10 @@ public class CartService(IUnitOfWork uow) : ICartService
         
         var cart = await uow.Carts.EnsureActiveCartAsync(userId);
         
-        await uow.Carts.AddOrUpdateItemAsync(cart.Id, req.BookId, req.Quantity, req.UnitPrice);
+        await uow.Carts.AddOrUpdateItemAsync(cart.UserId, req.BookId, req.Quantity, req.UnitPrice);
         
         cart = await uow.Carts.GetActiveCartByUserAsync(userId, includeItems: true) 
-               ?? throw new NotFoundException("Cart", cart.Id.ToString());
+               ?? throw new NotFoundException("Cart", cart.UserId.ToString());
 
         await uow.SaveAsync();
        
@@ -39,7 +39,7 @@ public class CartService(IUnitOfWork uow) : ICartService
         var cart = await uow.Carts.GetActiveCartByUserAsync(userId, includeItems: false) 
                    ?? throw new NotFoundException("Cart của user", userId.ToString());
         
-        await uow.Carts.RemoveItemAsync(cart.Id, bookId);
+        await uow.Carts.RemoveItemAsync(cart.UserId, bookId);
         await uow.SaveAsync();
     }
 
@@ -48,7 +48,7 @@ public class CartService(IUnitOfWork uow) : ICartService
         var cart = await uow.Carts.GetActiveCartByUserAsync(userId, includeItems: false) 
                    ?? throw new NotFoundException("Cart của user", userId.ToString());
 
-        await uow.Carts.ClearAsync(cart.Id);
+        await uow.Carts.ClearAsync(cart.UserId);
         await uow.SaveAsync();
     }
 
@@ -56,7 +56,7 @@ public class CartService(IUnitOfWork uow) : ICartService
     {
         var cart = await uow.Carts.GetActiveCartByUserAsync(userId, includeItems: false);
         if (cart is not null) 
-            await uow.Carts.DeactivateAsync(cart.Id);
+            await uow.Carts.DeactivateAsync(cart.UserId);
     }
     
     private static CartRes Map(Cart c)
@@ -69,7 +69,6 @@ public class CartService(IUnitOfWork uow) : ICartService
         ).ToList();
         
         return new CartRes(
-            c.Id,
             c.UserId,
             c.IsActive,
             c.TotalAmount,

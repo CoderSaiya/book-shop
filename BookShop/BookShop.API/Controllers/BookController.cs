@@ -42,6 +42,18 @@ public class BookController(IBookService bookService) : Controller
         return Ok(GlobalResponse<BookRes>.Success(book));
     }
     
+    [HttpGet("{id:guid}/related")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(GlobalResponse<IEnumerable<BookRes>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetRelated(
+        [FromRoute] Guid id,
+        [FromQuery] int days = 180,
+        [FromQuery] int limit = 12)
+    {
+        var books = await bookService.GetRelatedAsync(id, days, limit);
+        return Ok(GlobalResponse<IEnumerable<BookRes>>.Success(books));
+    }
+    
     [HttpPost]
     [Authorize(Roles = "Admin")]
     [Consumes("multipart/form-data")]
