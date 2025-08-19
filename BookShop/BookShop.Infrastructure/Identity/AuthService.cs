@@ -110,7 +110,7 @@ public class AuthService(
                 <tr>
                     <td style='background-color: #f8f9ff; padding: 30px; text-align: center; border-radius: 0 0 10px 10px; border-top: 1px solid #e1e5e9;'>
                         <p style='color: #999999; font-size: 14px; margin: 0 0 15px 0;'>
-                            📧 Email: no-reply@bookshop.com | 📞 Hotline: 1900-BOOK-SHOP
+                            📧 Email: no-reply@bookshop.com | 📞 Hotline: 0935-234-074
                         </p>
                         <p style='color: #999999; font-size: 12px; margin: 0;'>
                             © 2025 BookShop. Tất cả quyền được bảo lưu.<br>
@@ -204,17 +204,18 @@ public class AuthService(
         if (existingToken is null || existingToken.ExpiresAt < DateTime.Now || existingToken.IsRevoked)
             return null;
 
-        existingToken.ExpiresAt = existingToken.ExpiresAt.AddMinutes(-1);
+        // existingToken.ExpiresAt = existingToken.ExpiresAt.AddMinutes(-1);
         
         var user = existingToken.User;
         var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.Email, user.Email.Address),
+            new Claim(ClaimTypes.Email, user.Email.ToString()),
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Role, MapRole(user))
         };
         
         var newAccessToken = GenerateAccessToken(claims);
+        await unitOfWork.SaveAsync();
         
         return newAccessToken;
     }
