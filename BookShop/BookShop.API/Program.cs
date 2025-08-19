@@ -48,7 +48,8 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.SaveToken = true; 
+        options.RequireHttpsMetadata = true;
+        options.SaveToken = false;
         options.Events = new JwtBearerEvents
         {
             OnMessageReceived = ctx =>
@@ -79,6 +80,25 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             NameClaimType = ClaimTypes.NameIdentifier,
             RoleClaimType = ClaimTypes.Role
         };
+    })
+    .AddCookie("External")
+    .AddGoogle("Google", options =>
+    {
+        options.ClientId = builder.Configuration["Auth:Google:ClientId"]!;
+        options.ClientSecret = builder.Configuration["Auth:Google:ClientSecret"]!;
+        options.CallbackPath = "/signin-google"; // đăng trong Google Console
+        options.SignInScheme = "External";
+        options.SaveTokens = true;
+    })
+    .AddGitHub("GitHub", options =>
+    {
+        options.ClientId = builder.Configuration["Auth:GitHub:ClientId"]!;
+        options.ClientSecret = builder.Configuration["Auth:GitHub:ClientSecret"]!;
+        options.CallbackPath = "/signin-github"; // đăng trong GitHub OAuth app
+        options.SignInScheme = "External";
+        options.SaveTokens = true;
+        options.Scope.Add("read:user");
+        options.Scope.Add("user:email");
     });
 
 builder.Services.AddCors(options =>

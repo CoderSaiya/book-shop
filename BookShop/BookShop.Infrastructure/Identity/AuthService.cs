@@ -220,6 +220,32 @@ public class AuthService(
         return newAccessToken;
     }
 
+    public async Task<(string AccessToken, string RefreshToken, DateTimeOffset AccessExpiresAt)> IssueTokensForUserAsync(User user)
+    {
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+            new Claim(ClaimTypes.Email, user.Email.ToString()),
+            new Claim(ClaimTypes.Role, MapRole(user))
+        };
+
+        var accessExpiresAt = DateTimeOffset.UtcNow.AddMinutes(30);
+        var accessToken = GenerateAccessToken(claims);
+        var refreshToken = GenerateRefreshToken();
+
+        var rt = new RefreshToken
+        {
+            Token = refreshToken,
+            ExpiresAt = DateTime.UtcNow.AddDays(7),
+            UserId = user.Id
+        };
+        await unitOfWork.Refreshes.AddAsync(rt);
+        await unitOfWork.SaveAsync();
+
+        return (accessToken, refreshToken, accessExpiresAt);
+    }
+
     private static string MapRole(User baseUser) => baseUser switch
     {
         Admin => "Admin",

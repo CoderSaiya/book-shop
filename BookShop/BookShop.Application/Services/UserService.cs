@@ -1,4 +1,5 @@
-﻿using BookShop.Application.DTOs.Req;
+﻿using System.Security.Claims;
+using BookShop.Application.DTOs.Req;
 using BookShop.Application.DTOs.Res;
 using BookShop.Application.Interface;
 using BookShop.Domain.Common;
@@ -6,11 +7,15 @@ using BookShop.Domain.Entities;
 using BookShop.Domain.Helpers;
 using BookShop.Domain.Interfaces;
 using BookShop.Domain.ValueObjects;
+using FluentValidation;
 using Microsoft.AspNetCore.Http;
 
 namespace BookShop.Application.Services;
 
-public class UserService(IUnitOfWork uow) : IUserService
+public class UserService(
+    IUnitOfWork uow,
+    IAuthService auth
+    ) : IUserService
 {
     public async Task<IEnumerable<UserRes>> Search(string keyword, int page = 1, int pageSize = 50) =>
         (await uow.Users.SearchAsync(keyword, page, pageSize)).Select(u => new UserRes(
@@ -46,6 +51,45 @@ public class UserService(IUnitOfWork uow) : IUserService
             Role: (u is Admin) ? "Admin" : "Client",
             CreatedAt: u.CreatedAt
         );
+    }
+
+    public async Task<User> FindOrCreateExternal(string provider, string providerKey, string? email, ClaimsPrincipal principal)
+    {
+        User? user = null;
+        if (!string.IsNullOrWhiteSpace(email))
+        {
+            user = await uow.Users.GetByEmailAsync(email);
+            if (user is not null) return user;
+        }
+        
+        if (string.IsNullOrWhiteSpace(email))
+            throw new ValidationException("Provider không trả về email. Vui lòng bật email public hoặc đăng nhập cách khác.");
+        
+        var newUser = new Client
+        {
+            Email = Email.Create(email),
+            // Password: SSO không dùng → đặt random
+            Password = auth.HashPassword(Guid.NewGuid().ToString("N")),
+        };
+        
+        var givenName = principal.FindFirst(ClaimTypes.GivenName)?.Value ?? "";
+        var surname = principal.FindFirst(ClaimTypes.Surname)?.Value ?? "";
+        var fullName = principal.FindFirst(ClaimTypes.Name)?.Value ?? "";
+
+        // Nếu thiếu given/surname thì tách từ full name
+        if (string.IsNullOrWhiteSpace(givenName) && string.IsNullOrWhiteSpace(surname) && !string.IsNullOrWhiteSpace(fullName))
+        {
+            var parts = fullName.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            surname = parts.Length > 0 ? parts[^1] : "";
+            givenName = parts.Length > 1 ? string.Join(' ', parts[..^1]) : "";
+        }
+        
+        newUser.Profile.Name = Name.Create(givenName, surname);
+
+        await uow.Users.AddAsync(newUser);
+        await uow.SaveAsync();
+
+        return newUser;
     }
 
     public async Task UpdateProfile(Guid userId, UpdateProfileReq req)
@@ -117,4 +161,32 @@ public class UserService(IUnitOfWork uow) : IUserService
         await file.CopyToAsync(ms);
         return ms.ToArray();
     }
+    
+    private static bool IsValidEmail(string email)
+        => System.Text.RegularExpressions.Regex.IsMatch(
+            email, @"^[^\s@]+@[^\s@]+\.[^\s@]+$", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+    
+    private static string GenerateTempPassword(int length = 12)
+    {
+        const string chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@$%#?";
+        var data = new byte[length];
+        using var rng = System.Security.Cryptography.RandomNumberGenerator.Create();
+        rng.GetBytes(data);
+        var sb = new System.Text.StringBuilder(length);
+        foreach (var b in data) sb.Append(chars[b % chars.Length]);
+        return sb.ToString();
+    }
+
+    public UserRes Map(User u) =>
+        new UserRes(
+            UserId: u.Id,
+            Email: u.Email.ToString(),
+            Name: u.Profile.Name?.ToString() ?? "Unknown",
+            Phone: u.Profile.Phone?.ToString() ?? "Unknown",
+            Address: u.Profile.Address?.ToString() ?? "Unknown",
+            Avatar: u.Profile.Avatar ?? null,
+            Dob: u.Profile.DateOfBirth ?? null,
+            Role: (u is Admin) ? "Admin" : "Client",
+            CreatedAt: u.CreatedAt
+        );
 }
