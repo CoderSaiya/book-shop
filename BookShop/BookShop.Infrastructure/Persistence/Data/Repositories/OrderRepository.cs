@@ -23,6 +23,7 @@ public class OrderRepository(AppDbContext context) : GenericRepository<Order>(co
         await _context.Orders
             .Include(o => o.User)
             .Include(o => o.OrderItems)
+            .ThenInclude(ot => ot.Book)
             .AsNoTracking()
             .FirstOrDefaultAsync(o => o.Id == id);
 
