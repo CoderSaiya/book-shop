@@ -7,15 +7,17 @@ import { LanguageService } from "./core/services/language.service"
 import { Subject } from "rxjs"
 import { takeUntil } from "rxjs/operators"
 import {ToastContainerComponent} from './shared/components/toast-notify/toast-container.component';
+import {ChatbotComponent} from './shared/components/chatbot/chatbot.component';
 
 @Component({
   selector: "app-root",
   standalone: true,
-  imports: [CommonModule, RouterOutlet, ToastContainerComponent],
+  imports: [CommonModule, RouterOutlet, ToastContainerComponent, ChatbotComponent],
   template: `
     <div [attr.data-theme]="currentTheme">
       <router-outlet></router-outlet>
       <app-toast-container></app-toast-container>
+      <app-chatbot></app-chatbot>
     </div>
   `,
   styleUrls: ["app.component.scss"],

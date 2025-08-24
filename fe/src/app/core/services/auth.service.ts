@@ -1,10 +1,10 @@
-import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import {Injectable} from '@angular/core';
+import {HttpClient, HttpParams} from '@angular/common/http';
 import {BehaviorSubject, Observable, of} from 'rxjs';
 import {map, switchMap, tap} from 'rxjs/operators';
-import { environment } from '../../../environments/environment';
-import { GlobalResponse } from '../../models/api-response.model';
-import { LoginCredentials, RegisterData } from '../../models/auth.model';
+import {environment} from '../../../environments/environment';
+import {GlobalResponse} from '../../models/api-response.model';
+import {LoginCredentials, RegisterData} from '../../models/auth.model';
 import {User} from '../../models/book.model';
 import {formatDate} from '@angular/common';
 
@@ -135,6 +135,17 @@ export class AuthService {
       }),
       map(() => void 0)
     );
+  }
+
+  loginWithProvider(provider: 'google' | 'github', returnPath = '/auth/sso/success') {
+    const returnUrl = `${window.location.origin}${returnPath}`;
+    window.location.href = `${this.authUrl}/external/${provider}/start?returnUrl=${encodeURIComponent(returnUrl)}`;
+  }
+
+  storeAccessTokenFromFragment(hash: string) {
+    const params = new URLSearchParams(hash.replace(/^#/, ''));
+    const access = params.get('access_token');
+    if (access) this.setAccessToken(access);
   }
 
   clearToken() { this.setAccessToken(null); }

@@ -15,6 +15,10 @@ export const routes: Routes = [
     loadComponent: () => import("./pages/auth/register/register.component").then((m) => m.RegisterComponent),
   },
   {
+    path: "auth/sso/success",
+    loadComponent: () => import("./pages/auth/sso-success/sso-success.component").then(m => m.SsoSuccessComponent)
+  },
+  {
     path: "books",
     loadComponent: () => import("./pages/books/books.component").then((m) => m.BooksComponent),
   },
