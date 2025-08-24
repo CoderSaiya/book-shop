@@ -1,8 +1,10 @@
-﻿using System.Security.Claims;
+﻿using System.Net;
+using System.Security.Claims;
 using BookShop.Application.DTOs.Req;
 using BookShop.Application.DTOs.Res;
 using BookShop.Application.Interface;
 using BookShop.Domain.Common;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -92,5 +94,73 @@ public class AuthController(
         var userId = Guid.Parse(userIdStr);
         var dto = await authService.GetCurrentUserAsync(userId);
         return Ok(GlobalResponse<UserRes>.Success(dto));
+    }
+
+    [HttpGet("external/{provider}/start")]
+    [AllowAnonymous]
+    public IActionResult External(
+        string provider,
+        [FromQuery] string? returnUrl,
+        [FromServices] IConfiguration cfg)
+    {
+        var providers = new[] { "google", "github" };
+        if (!providers.Contains(provider.ToLower()))
+            return BadRequest("Unsupported provider");
+
+        var fallbackReturn = $"{cfg["FrontendBaseUrl"]}/auth/sso/success";
+        var encoded = WebUtility.UrlEncode(returnUrl ?? fallbackReturn);
+
+        var redirectUri = $"/api/auth/external/callback?returnUrl={encoded}";
+        var props = new AuthenticationProperties { RedirectUri = redirectUri };
+
+        var scheme = provider.Equals("google", StringComparison.OrdinalIgnoreCase) ? "Google" : "GitHub";
+        // Không cần mảng; 1 scheme là đủ
+        return Challenge(props, scheme);
+    }
+    
+    [HttpGet("external/callback")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ExternalCallback(
+        [FromServices] IUserService users,
+        [FromServices] IAuthService auth,
+        [FromQuery] string? returnUrl,
+        [FromServices] IConfiguration cfg)
+    {
+        // Dùng thuộc tính sẵn có thay vì tham số HttpContext
+        var result = await HttpContext.AuthenticateAsync("External");
+        if (!result.Succeeded)
+            return Redirect($"{cfg["FrontendBaseUrl"]}/auth/login?error=external_failed");
+
+        var principal   = result.Principal!;
+        var email       = principal.FindFirst(ClaimTypes.Email)?.Value;
+        var providerKey = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var provider    = result.Ticket!.AuthenticationScheme; // "Google" | "GitHub"
+
+        if (string.IsNullOrEmpty(providerKey))
+            return Redirect($"{cfg["FrontendBaseUrl"]}/auth/login?error=missing_provider_key");
+
+        var user = await users.FindOrCreateExternal(provider, providerKey, email, principal);
+        var issued = await auth.IssueTokensForUserAsync(user);
+
+        // refresh token -> cookie HttpOnly
+        var isDev = env.IsDevelopment();
+        Response.Cookies.Append("refresh_token", issued.RefreshToken, new CookieOptions {
+            HttpOnly = true,
+            Secure = !isDev,
+            SameSite = isDev ? SameSiteMode.Lax : SameSiteMode.None,
+            Path = "/",
+            Expires = DateTimeOffset.UtcNow.AddDays(7)
+        });
+
+        // access token trả về FE qua fragment
+        var successUrl = string.IsNullOrEmpty(returnUrl)
+            ? $"{cfg["FrontendBaseUrl"]}/auth/sso/success"
+            : returnUrl!;
+        var redirectWithToken =
+            $"{successUrl}#access_token={WebUtility.UrlEncode(issued.AccessToken)}" +
+            $"&expires_at={issued.AccessExpiresAt.ToUnixTimeSeconds()}&token_type=Bearer";
+
+        await HttpContext.SignOutAsync("External");
+        return Redirect(redirectWithToken);
     }
 }

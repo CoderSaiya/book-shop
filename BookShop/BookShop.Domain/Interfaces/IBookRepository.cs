@@ -9,4 +9,5 @@ public interface IBookRepository : IRepository<Book>
     Task<IEnumerable<Book>> GetByAuthorAsync(Guid authorId);
     Task<IEnumerable<Book>> GetByPublisher(Guid publisherId);
     Task<IReadOnlyList<Book>> GetRelatedAsync(Guid bookId, int days = 180, int limit = 12);
+    Task<IEnumerable<Book>> GetByCategoryAsync(List<Guid> ids);
 }

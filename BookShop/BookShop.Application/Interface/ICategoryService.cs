@@ -11,4 +11,5 @@ public interface ICategoryService
     Task DeleteAsync(Guid id);
     Task<CategoryRes> GetAsync(Guid id);
     Task<IReadOnlyList<CategoryRes>> GetAllAsync();
+    Task<IReadOnlyList<CategoryMap>> MapNamesToIdsAsync(IEnumerable<string> names);
 }

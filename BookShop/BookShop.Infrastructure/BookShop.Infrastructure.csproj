@@ -15,6 +15,11 @@
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
       <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.7" />
+      <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.22.1" />
+      <PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="1.22.2" />
+        <PackageReference Include="Microsoft.ML.Tokenizers" Version="2.0.0-preview.*" />
+        <PackageReference Include="Tokenizers.DotNet" Version="1.2.1" />
+        <PackageReference Include="Tokenizers.DotNet.runtime.win-x64" Version="1.2.1" />
       <PackageReference Include="MimeKit" Version="4.13.0" />
       <PackageReference Include="RabbitMQ.Client" Version="7.1.2" />
     </ItemGroup>
@@ -25,6 +30,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Folder Include="ML\models\" />
       <Folder Include="Persistence\Migrations\" />
     </ItemGroup>
 

@@ -1,8 +1,10 @@
 ﻿using System.Diagnostics;
 using BookShop.Application.Interface;
+using BookShop.Application.Interface.AI;
 using BookShop.Application.Services;
 using BookShop.Domain.Interfaces;
 using BookShop.Infrastructure.Identity;
+using BookShop.Infrastructure.ML;
 using BookShop.Infrastructure.Persistence.Data;
 using BookShop.Infrastructure.Persistence.Data.Repositories;
 using BookShop.Infrastructure.Services.Background;
@@ -69,6 +71,7 @@ public static class DependencyInjection
         services.AddSingleton<IMailSender, EmailSender>();
         services.AddScoped<ITextHasher, Sha256TextHasher>();
         services.AddHttpClient<ITranslator, AzureTranslator>();
+        services.AddScoped<IChatService, ChatService>();
         
         services.AddHostedService<RabbitMqListener>();
         
@@ -77,6 +80,8 @@ public static class DependencyInjection
     
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
+        services.AddSignalR();
+        
         return services;
     }
 }

@@ -10,5 +10,6 @@ public class RefreshTokenRepository(AppDbContext context) : GenericRepository<Re
 
     public async Task<RefreshToken?> GetByTokenAsync(string token) => 
         await _context.RefreshTokens
+            .Include(rt => rt.User)
             .FirstOrDefaultAsync(t => t.Token == token);
 }

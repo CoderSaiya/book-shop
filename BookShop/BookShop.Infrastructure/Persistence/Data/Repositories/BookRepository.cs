@@ -98,7 +98,7 @@ public class BookRepository(AppDbContext context) : GenericRepository<Book>(cont
             from s in sj.DefaultIfEmpty()
             join rv in reviewQuery on b.Id equals rv.BookId into rj
             from rv in rj.DefaultIfEmpty()
-            let soldQty = (int?)s.SoldQty      ?? 0
+            let soldQty = (int?)s.SoldQty ?? 0
             let avgRating = (double?)rv.AvgRating ?? 0.0
             let reviewCnt = (int?)rv.ReviewCount ?? 0
             
@@ -228,4 +228,14 @@ public class BookRepository(AppDbContext context) : GenericRepository<Book>(cont
             .Take(limit)
             .ToListAsync();
     }
+
+    public async Task<IEnumerable<Book>> GetByCategoryAsync(List<Guid> ids) =>
+        await context.Books
+            .Include(b => b.Author)
+            .Include(b => b.Category)
+            .Include(b => b.Publisher)
+            .Include(b => b.Reviews)
+            .AsNoTracking()
+            .Where(b => ids.Contains(b.CategoryId))
+            .ToListAsync();
 }
