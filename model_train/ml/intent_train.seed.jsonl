@@ -1,0 +1,76 @@
+{"text":"gợi ý truyện trinh thám khoảng 150k","label":"recommend"}
+{"text":"tư vấn giúp tôi sách văn học tầm 200k","label":"recommend"}
+{"text":"đề xuất vài cuốn kỹ năng khoảng 100k","label":"recommend"}
+{"text":"muốn tham khảo sách kinh tế giá gần 300k","label":"recommend"}
+{"text":"cho mình gợi ý sách thiếu nhi khoảng 50k","label":"recommend"}
+{"text":"tìm giúp sách tâm lý quanh 120k","label":"recommend"}
+{"text":"cần gợi ý tiểu thuyết khoảng 100k","label":"recommend"}
+{"text":"đề xuất 3 cuốn ngôn tình giá rẻ","label":"recommend"}
+{"text":"gợi ý sách self-help tầm 150k đến 250k","label":"recommend"}
+{"text":"mình muốn gợi ý sách lập trình khoảng 200k","label":"recommend"}
+
+{"text":"thêm 2 cuốn sherlock vào giỏ","label":"add_to_cart"}
+{"text":"mua 1 quyển Phía sau nghi can X","label":"add_to_cart"}
+{"text":"bỏ vào giỏ 3 quyển Đắc Nhân Tâm","label":"add_to_cart"}
+{"text":"cho 2 sách kinh tế vào giỏ giúp mình","label":"add_to_cart"}
+{"text":"add 1 cuốn Dune vào giỏ","label":"add_to_cart"}
+{"text":"mua thêm 1 quyển Học ăn nói","label":"add_to_cart"}
+{"text":"thêm 5 quyển truyện tranh vào giỏ","label":"add_to_cart"}
+{"text":"mua 2 tập Harry Potter","label":"add_to_cart"}
+{"text":"cho mình 1 bản Nhà giả kim vào giỏ","label":"add_to_cart"}
+{"text":"thêm 1 cuốn Sapiens vào giỏ nhé","label":"add_to_cart"}
+
+{"text":"đúng rồi","label":"confirm_yes"}
+{"text":"ok chốt","label":"confirm_yes"}
+{"text":"chuẩn","label":"confirm_yes"}
+{"text":"đồng ý","label":"confirm_yes"}
+{"text":"oke","label":"confirm_yes"}
+{"text":"ừ đúng","label":"confirm_yes"}
+{"text":"chính xác","label":"confirm_yes"}
+{"text":"được đó","label":"confirm_yes"}
+{"text":"vâng","label":"confirm_yes"}
+{"text":"tiếp tục đi","label":"confirm_yes"}
+
+{"text":"không","label":"confirm_no"}
+{"text":"không phải","label":"confirm_no"}
+{"text":"hủy giúp","label":"confirm_no"}
+{"text":"không đồng ý","label":"confirm_no"}
+{"text":"không lấy","label":"confirm_no"}
+{"text":"thôi bỏ","label":"confirm_no"}
+{"text":"đừng thêm","label":"confirm_no"}
+{"text":"tạm dừng nhé","label":"confirm_no"}
+{"text":"sai rồi","label":"confirm_no"}
+{"text":"không cần nữa","label":"confirm_no"}
+
+{"text":"chào shop","label":"greeting"}
+{"text":"xin chào","label":"greeting"}
+{"text":"hello","label":"greeting"}
+{"text":"hi","label":"greeting"}
+{"text":"chào bạn","label":"greeting"}
+{"text":"chào buổi sáng","label":"greeting"}
+{"text":"chào buổi tối","label":"greeting"}
+{"text":"alo shop","label":"greeting"}
+{"text":"shop ơi","label":"greeting"}
+{"text":"mình chào bạn","label":"greeting"}
+
+{"text":"tạm biệt","label":"goodbye"}
+{"text":"bye","label":"goodbye"}
+{"text":"cảm ơn, tạm biệt","label":"goodbye"}
+{"text":"hẹn gặp lại","label":"goodbye"}
+{"text":"mình out đây","label":"goodbye"}
+{"text":"bye shop","label":"goodbye"}
+{"text":"kết thúc nhé","label":"goodbye"}
+{"text":"chào tạm biệt","label":"goodbye"}
+{"text":"cảm ơn mình đi đây","label":"goodbye"}
+{"text":"see ya","label":"goodbye"}
+
+{"text":"lọc giá từ 100k đến 200k","label":"refine"}
+{"text":"giảm xuống khoảng 150k","label":"refine"}
+{"text":"chỉ lấy trong tầm 80k-120k","label":"refine"}
+{"text":"lọc thể loại trinh thám","label":"refine"}
+{"text":"lọc ra sách văn học giá 100k","label":"refine"}
+{"text":"chỉ hiển thị khoảng 50-100k","label":"refine"}
+{"text":"lọc bớt chỉ còn kỹ năng","label":"refine"}
+{"text":"có giảm giá 200-300k không","label":"refine"}
+{"text":"lọc theo mức 120k","label":"refine"}
+{"text":"tầm giá 150k thôi","label":"refine"}
