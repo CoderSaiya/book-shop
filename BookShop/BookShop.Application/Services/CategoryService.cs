@@ -4,6 +4,7 @@ using BookShop.Application.DTOs.Res;
 using BookShop.Application.Interface;
 using BookShop.Domain.Common;
 using BookShop.Domain.Entities;
+using BookShop.Domain.Helpers;
 using BookShop.Domain.Interfaces;
 using FluentValidation;
 
@@ -82,7 +83,33 @@ public class CategoryService(
         var results = await Task.WhenAll(list.Select(MapAsync));
         return results.ToList();
     }
-    
+
+    public async Task<IReadOnlyList<CategoryMap>> MapNamesToIdsAsync(IEnumerable<string> names)
+    {
+        var list = names?.Where(n => !string.IsNullOrWhiteSpace(n)).Select(n => n.Trim()).Distinct().ToList() ?? [];
+        if (list.Count == 0) return [];
+
+        // Lấy toàn bộ category 1 lần
+        var cats = (await uow.Categories.ListAsync())
+            .Select(c => new { c.Id, c.Name })
+            .ToList();
+
+        // So khớp không dấu, contains
+        var result = new List<CategoryMap>();
+        foreach (var q in list)
+        {
+            var qNorm = IntentHelper.RemoveDiacritics(q).ToLowerInvariant();
+
+            var hit = cats.FirstOrDefault(c =>
+                IntentHelper.RemoveDiacritics(c.Name).ToLowerInvariant().Contains(qNorm));
+
+            if (hit is not null)
+                result.Add(new CategoryMap(hit.Id, hit.Name));
+        }
+
+        return result;
+    }
+
     private async Task<CategoryRes> MapAsync(Category c)
     {
         // Khóa cache: EntityType="Category", EntityKey: ưu tiên Slug nếu có, tạm dùng Id

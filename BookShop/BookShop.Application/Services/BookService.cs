@@ -40,6 +40,32 @@ public class BookService(
         return list;
     }
 
+    public async Task<IReadOnlyList<BookRes>> RecommendByCategories(IEnumerable<Guid> categoryIds, int limit, decimal? minPrice, decimal? maxPrice, string? keyword)
+    {
+        var ids = categoryIds?.Distinct().ToList() ?? [];
+        if (ids.Count == 0) return [];
+
+        // base query
+        var q = await unitOfWork.Books.GetByCategoryAsync(ids);
+
+        if (minPrice is not null) q = q.Where(b => b.CurrentPrice >= minPrice);
+        if (maxPrice is not null) q = q.Where(b => b.CurrentPrice <= maxPrice);
+
+        if (!string.IsNullOrWhiteSpace(keyword))
+        {
+            var kw = keyword.Trim();
+            q = q.Where(b => b.Title.Contains(kw) || (b.Description != null && b.Description.Contains(kw)));
+        }
+        
+        q = q.OrderByDescending(b => b.OrderItems.Count)
+            .ThenByDescending(b => b.Reviews.Count)
+            .ThenByDescending(b => b.PublishedDate);
+
+        var tasks = q.Select(MapAsync);
+        var mapped = await Task.WhenAll(tasks);
+        return mapped;
+    }
+
     public async Task<BookRes> GetById(Guid bookId)
     {
         ValidationHelper.Validate((bookId == Guid.Empty, "Id của sách không được để trống."));
