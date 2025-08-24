@@ -191,7 +191,7 @@ Hệ thống sử dụng model XLM-RoBERTa-Large để phân loại tin nhắn c
 
 ## 📝 API Documentation
 
-API documentation có thể truy cập tại: `[http://localhost:7130/swagger](https://localhost:7130/swagger/index.html)`
+API documentation có thể truy cập tại: [http://localhost:7130/swagger](https://localhost:7130/swagger/index.html)
 
 ### Endpoints chính:
 - `GET /api/books` - Lấy danh sách sách
