@@ -252,7 +252,7 @@ interface CartItem {
                 class="btn btn-primary btn-full place-order-btn"
                 [disabled]="!isFormValid() || isProcessing() || form.paymentMethod !== 'cod'">
                 <span *ngIf="isProcessing()" class="loading-spinner"></span>
-                {{ isProcessing() ? ('checkout.processing' | translate) : ('checkout.placeOrder' | translate) }}
+                {{ isProcessing() ? ('common.loading' | translate) : ('checkout.placeOrder' | translate) }}
               </button>
               <p class="secure-checkout">🔒 {{ 'checkout.secureCheckout' | translate }}</p>
             </form>

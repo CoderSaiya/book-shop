@@ -1,4 +1,4 @@
-import { Component, type OnDestroy } from "@angular/core";
+import {Component, inject, type OnDestroy} from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { RouterModule, Router } from "@angular/router";
 import { FormsModule } from "@angular/forms";
@@ -74,6 +74,19 @@ import type {LoginCredentials} from "../../../models/auth.model"
                 <span *ngIf="!isLoading">{{ 'auth.login' | translate }}</span>
                 <span *ngIf="isLoading">{{ 'common.loading' | translate }}...</span>
               </button>
+
+              <div class="auth-divider">
+                <span>or</span>
+              </div>
+
+              <div class="oauth-buttons">
+                <button type="button" class="btn btn-oauth google" (click)="loginWithGoogle()" [disabled]="isLoading">
+                  <img src="/assets/icons/google.svg" alt="Google" /> Continue with Google
+                </button>
+                <button type="button" class="btn btn-oauth github" (click)="loginWithGitHub()" [disabled]="isLoading">
+                  <img src="/assets/icons/github.svg" alt="GitHub" /> Continue with GitHub
+                </button>
+              </div>
             </form>
 
             <div class="auth-footer">
@@ -97,17 +110,15 @@ import type {LoginCredentials} from "../../../models/auth.model"
   styleUrls: ["../auth.component.scss"],
 })
 export class LoginComponent implements OnDestroy {
+  private authService = inject(AuthService);
+  private router = inject(Router);
+
   credentials: LoginCredentials = { email: "", password: "" };
   isLoading = false;
   loginError = "";
   emailError = false;
   passwordError = false;
   private destroy$ = new Subject<void>();
-
-  constructor(
-    private authService: AuthService,
-    private router: Router,
-  ) {}
 
   ngOnDestroy(): void {
     this.destroy$.next();
@@ -139,6 +150,13 @@ export class LoginComponent implements OnDestroy {
           console.error("Login error:", error);
         },
       });
+  }
+
+  loginWithGoogle() {
+    this.authService.loginWithProvider('google');
+  }
+  loginWithGitHub() {
+    this.authService.loginWithProvider('github');
   }
 
   private validateForm(): void {
