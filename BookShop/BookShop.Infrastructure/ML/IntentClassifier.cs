@@ -62,7 +62,7 @@ public sealed class IntentClassifier(
             using var doc = JsonDocument.Parse(File.ReadAllText(tokJsonPath));
             var root = doc.RootElement;
 
-            // 1) Đọc "padding": { "pad_id": <int> } nếu tồn tại và là Object
+            // Đọc "padding": { "pad_id": <int> } nếu tồn tại và là Object
             if (root.TryGetProperty("padding", out var padding)
                 && padding.ValueKind == JsonValueKind.Object
                 && padding.TryGetProperty("pad_id", out var padIdEl)
@@ -72,7 +72,7 @@ public sealed class IntentClassifier(
                 return padId;
             }
 
-            // 2) Thử tìm trong "added_tokens": [{ "content": "<pad>", "id": <int>, "special": true }, ...]
+            // Thử tìm trong "added_tokens": [{ "content": "<pad>", "id": <int>, "special": true }, ...]
             if (root.TryGetProperty("added_tokens", out var added)
                 && added.ValueKind == JsonValueKind.Array)
             {
