@@ -121,6 +121,8 @@ builder.Configuration.AddJsonFile("appsettings.json", optional: true, reloadOnCh
 builder.Services.Configure<RabbitMqSettings>(builder.Configuration.GetSection("RabbitMqSettings"));
 builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
 builder.Services.Configure<MlIntentOptions>(builder.Configuration.GetSection("Ml"));
+builder.Services.Configure<MomoSettings>(builder.Configuration.GetSection("Payment:MoMo"));
+builder.Services.Configure<VnPaySettings>(builder.Configuration.GetSection("Payment:VnPay"));
 
 builder.Services.AddApplication();
 builder.Services.AddPooledDbContextFactory<AppDbContext>(options =>
