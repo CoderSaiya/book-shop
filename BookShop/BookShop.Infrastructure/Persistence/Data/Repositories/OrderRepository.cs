@@ -29,6 +29,8 @@ public class OrderRepository(AppDbContext context) : GenericRepository<Order>(co
 
     public async Task<IReadOnlyList<Order>> GetByUserAsync(Guid userId, int page = 1, int pageSize = 20) =>
         await _context.Orders
+            .Include(o => o.OrderItems)
+            .ThenInclude(ot => ot.Book)
             .Where(o => o.UserId == userId)
             .OrderByDescending(o => o.CreatedAt)
             .Skip((page - 1) * pageSize)

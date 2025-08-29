@@ -8,7 +8,7 @@ public interface IOrderService
 {
     Task<OrderDetailRes> CreateAsync(Guid userId, CreateOrderReq req);
     Task<OrderDetailRes> GetDetailAsync(Guid orderId);
-    Task<IReadOnlyList<OrderSummaryRes>> GetByUserAsync(Guid userId, int page, int pageSize);
+    Task<IReadOnlyList<OrderDetailRes>> GetByUserAsync(Guid userId, int page, int pageSize);
     Task UpdateStatusAsync(Guid orderId, OrderStatus status);
     Task UpdatePaymentAsync(Guid orderId, PaymentStatus status, DateTime? paidAt);
     Task<decimal> GetRevenueAsync(DateTime fromUtc, DateTime toUtc);

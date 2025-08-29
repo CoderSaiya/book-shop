@@ -255,17 +255,12 @@ public class OrderService(
         return Map(o);
     }
 
-    public async Task<IReadOnlyList<OrderSummaryRes>> GetByUserAsync(Guid userId, int page, int pageSize)
+    public async Task<IReadOnlyList<OrderDetailRes>> GetByUserAsync(Guid userId, int page, int pageSize)
     {
         var list = await uow.Orders.GetByUserAsync(userId, page, pageSize);
-        return list.Select(o => new OrderSummaryRes(
-            o.Id,
-            o.OrderNumber,
-            o.TotalAmount,
-            o.Status.ToString(),
-            o.PaymentStatus.ToString(),
-            o.CreatedAt)
-        ).ToList();
+        return list
+            .Select(Map)
+            .ToList();
     }
 
     public async Task UpdateStatusAsync(Guid orderId, OrderStatus status)
