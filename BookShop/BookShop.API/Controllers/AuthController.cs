@@ -39,7 +39,7 @@ public class AuthController(
         var res = await authService.LoginAsync(req);
 
         var isDev = env.IsDevelopment();
-        Response.Cookies.Append("rt", res.RefreshToken, new CookieOptions
+        Response.Cookies.Append("refresh_token", res.RefreshToken, new CookieOptions
         {
             HttpOnly = true,
             Secure = !isDev,
@@ -70,7 +70,7 @@ public class AuthController(
     public IActionResult Logout()
     {
         var isDev = env.IsDevelopment();
-        Response.Cookies.Delete("rt", new CookieOptions
+        Response.Cookies.Delete("refresh_token", new CookieOptions
         {
             HttpOnly = true,
             Secure = !isDev,
@@ -131,10 +131,10 @@ public class AuthController(
         if (!result.Succeeded)
             return Redirect($"{cfg["FrontendBaseUrl"]}/auth/login?error=external_failed");
 
-        var principal   = result.Principal!;
-        var email       = principal.FindFirst(ClaimTypes.Email)?.Value;
+        var principal = result.Principal!;
+        var email = principal.FindFirst(ClaimTypes.Email)?.Value;
         var providerKey = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        var provider    = result.Ticket!.AuthenticationScheme; // "Google" | "GitHub"
+        var provider = result.Ticket!.AuthenticationScheme; // "Google" | "GitHub"
 
         if (string.IsNullOrEmpty(providerKey))
             return Redirect($"{cfg["FrontendBaseUrl"]}/auth/login?error=missing_provider_key");
