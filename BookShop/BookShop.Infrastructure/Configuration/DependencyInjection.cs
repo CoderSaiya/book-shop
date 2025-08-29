@@ -72,6 +72,9 @@ public static class DependencyInjection
         services.AddScoped<ITextHasher, Sha256TextHasher>();
         services.AddHttpClient<ITranslator, AzureTranslator>();
         services.AddScoped<IChatService, ChatService>();
+        services.AddHttpClient<MomoGateway>();
+        services.AddHttpClient<VnPayGateway>();
+        services.AddScoped<IPaymentFactory, PaymentFactory>();
         
         services.AddHostedService<RabbitMqListener>();
         
