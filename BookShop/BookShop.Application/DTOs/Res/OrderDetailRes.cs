@@ -6,6 +6,7 @@ public record OrderDetailRes(
     Guid UserId,
     decimal TotalAmount,
     string Status,
+    string PaymentMethod,
     string PaymentStatus,
     string ShippingAddress,
     string ShippingCity,

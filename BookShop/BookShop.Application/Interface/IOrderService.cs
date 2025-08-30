@@ -1,6 +1,7 @@
 ﻿using BookShop.Application.DTOs.Req;
 using BookShop.Application.DTOs.Res;
 using BookShop.Domain.Entities;
+using BookShop.Domain.ValueObjects;
 
 namespace BookShop.Application.Interface;
 
@@ -12,4 +13,5 @@ public interface IOrderService
     Task UpdateStatusAsync(Guid orderId, OrderStatus status);
     Task UpdatePaymentAsync(Guid orderId, PaymentStatus status, DateTime? paidAt);
     Task<decimal> GetRevenueAsync(DateTime fromUtc, DateTime toUtc);
+    Task MarkPaidAsync(Guid orderId, PaymentProvider provider);
 }

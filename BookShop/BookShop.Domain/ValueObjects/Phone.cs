@@ -32,10 +32,10 @@ public record Phone
         if (digits.Length < 5)
             throw new ArgumentException("Phone number is too short.", nameof(input));
         
-        var countryCode = digits.Substring(0, 1);
-        var subscriber = digits.Substring(1);
+        // var countryCode = digits.Substring(0, 1);
+        // var subscriber = digits.Substring(1);
 
-        return Create(countryCode, subscriber);
+        return Create("+84", digits);
     }
     
     private static void ValidatePart(string value, int minLen, int maxLen, string name)

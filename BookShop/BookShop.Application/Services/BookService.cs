@@ -1,6 +1,7 @@
 ﻿using BookShop.Application.DTOs;
 using BookShop.Application.DTOs.Req;
 using BookShop.Application.DTOs.Res;
+using BookShop.Application.Helpers;
 using BookShop.Application.Interface;
 using BookShop.Domain.Common;
 using BookShop.Domain.Entities;
@@ -111,20 +112,36 @@ public class BookService(
             Price = request.Price!.Value,
             Stock = request.Stock!.Value,
             Description = request.Description?.Trim(),
-            PublishedDate = request.PublishingDate
+            PublishedDate = request.PublishingDate,
+            CoverImage = []
         };
-        
-        var base64Images = new List<string>();
-        foreach (var image in request.Images)
-        {
-            var bytes = await ToByteArrayAsync(image);
-            var base64 = $"data:{image.ContentType};base64,{Convert.ToBase64String(bytes)}";
-            base64Images.Add(base64);
-        }
-        book.CoverImage = base64Images.ToArray();
         
         await unitOfWork.Books.AddAsync(book);
         await unitOfWork.SaveAsync();
+        
+        if (request.Images.Count != 0)
+        {
+            var originals = new List<string>();
+            var thumbs = new List<string>();
+
+            foreach (var img in request.Images.Take(6)) // giới hạn số ảnh
+            {
+                using var s = img.OpenReadStream();
+                // Lưu original nhưng đã nén WebP & resize trần
+                var ori = await ImageBase64Helper.OriginalToWebpBase64Async(s, 1600, 1600, 80);
+                originals.Add(ori);
+
+                s.Position = 0;
+                var th = await ImageBase64Helper.ToWebpBase64Async(s, 320, 320, 70);
+                thumbs.Add(th);
+            }
+
+            book.CoverImage = originals.ToArray();
+            book.CoverThumbs = thumbs.ToArray();
+            book.PrimaryThumb = thumbs.FirstOrDefault();
+            await unitOfWork.Books.UpdateAsync(book);
+            await unitOfWork.SaveAsync();
+        }
     }
 
     public async Task Update(Guid bookId, UpdateBookReq request)
@@ -212,7 +229,7 @@ public class BookService(
         var title = await LocalizeRequiredAsync("Book", b.Id.ToString(), "Title", b.Title);
         var desc = await LocalizeOptionalAsync("Book", b.Id.ToString(), "Description", b.Description);
         var cat = await LocalizeRequiredAsync("Category", b.CategoryId.ToString(), "Name", b.Category.Name);
-
+        
         return new BookRes(
             BookId: b.Id,
             AuthorName: b.Author.Name,
@@ -223,12 +240,32 @@ public class BookService(
             Price: b.Price,
             Sale: b.Sale,
             CurrentPrice: b.CurrentPrice,
-            Images: b.CoverImage.ToList(),
+            Images: [b.PrimaryThumb!],
             PublishedDate: b.PublishedDate.ToString("dd/MM/yyyy"),
             IsSold: b.Stock <= 0,
             Category: new CategoryDto(b.CategoryId, cat)
         );
     }
+    
+    private IQueryable<Book> AsListLean(IQueryable<Book> q) =>
+        q.Select(b => new Book {
+            Id = b.Id,
+            AuthorId = b.AuthorId,
+            PublisherId = b.PublisherId,
+            CategoryId = b.CategoryId,
+            Title = b.Title,
+            Description = b.Description,
+            Stock = b.Stock,
+            Price = b.Price,
+            Sale = b.Sale,
+            PublishedDate = b.PublishedDate,
+            Author = b.Author,
+            Publisher= b.Publisher,
+            Category = b.Category,
+            CoverImage = Array.Empty<string>(),
+            CoverThumbs = string.IsNullOrEmpty(b.PrimaryThumb) ? Array.Empty<string>() : new[] { b.PrimaryThumb },
+            PrimaryThumb = b.PrimaryThumb
+        });
 
     private async Task<LocalizedTextDto> LocalizeRequiredAsync(string entityType, string entityKey, string field, string viValue)
     {

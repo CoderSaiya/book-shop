@@ -315,7 +315,29 @@ public class OrderService(
 
     public Task<decimal> GetRevenueAsync(DateTime fromUtc, DateTime toUtc) => 
         uow.Orders.GetRevenueAsync(fromUtc, toUtc);
-    
+
+    public async Task MarkPaidAsync(Guid orderId, PaymentProvider provider)
+    {
+        var order = await uow.Orders.GetByIdAsync(orderId) 
+                    ?? throw new KeyNotFoundException("Order not found");
+
+        if (order.PaymentStatus != PaymentStatus.Paid)
+        {
+            Console.WriteLine("abc2");
+            order.PaymentStatus = PaymentStatus.Paid;
+            order.Status = OrderStatus.Confirmed;
+            order.PaidAt = DateTime.UtcNow;
+            order.UpdatedAt = DateTime.UtcNow;
+            order.PaymentMethod = provider switch
+            {
+                PaymentProvider.MoMo => PaymentMethod.Momo,
+                PaymentProvider.VnPay => PaymentMethod.VnPay,
+                _ => order.PaymentMethod
+            };
+            await uow.SaveAsync();
+        }
+    }
+
     private async Task<OrderDetailRes> MapDetailAsync(Guid id)
         => Map((await uow.Orders.GetByIdAsync(id))!);
     
@@ -337,6 +359,7 @@ public class OrderService(
             o.UserId,
             o.TotalAmount,
             o.Status.ToString(),
+            o.PaymentMethod.ToString(),
             o.PaymentStatus.ToString(),
             o.ShippingAddress,
             o.ShippingCity,
