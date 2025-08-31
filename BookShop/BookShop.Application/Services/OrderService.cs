@@ -83,6 +83,11 @@ public class OrderService(
         var cart = await uow.Carts.GetActiveCartByUserAsync(userId, includeItems: true);
         if (cart is not null) await uow.Carts.DeactivateAsync(cart.UserId);
         
+        // reload
+        var orderLoad = await uow.Orders.GetByIdAsync(order.Id);
+        if (orderLoad is null)
+            throw new NotFoundException("Order", order.Id.ToString());
+        
         // Email xác nhận
         var mm = new EmailMessage
         {
@@ -142,12 +147,12 @@ public class OrderService(
                                              <tr>
                                                  <td style='color: #666666; font-size: 14px; padding: 8px 0; border-bottom: 1px solid #f0f0f0;'><strong>Thanh toán:</strong></td>
                                                  <td style='color: #333333; font-size: 14px; padding: 8px 0; border-bottom: 1px solid #f0f0f0; text-align: right;'>
-                                                     <span style='background-color: {(order.PaymentStatus == PaymentStatus.Paid ? "#d4edda" : "#fff3cd")}; color: {(order.PaymentStatus == PaymentStatus.Paid ? "#155724" : "#856404")}; padding: 4px 8px; border-radius: 12px; font-size: 12px;'>{order.PaymentStatus}</span>
+                                                     <span style='background-color: {(orderLoad.PaymentStatus == PaymentStatus.Paid ? "#d4edda" : "#fff3cd")}; color: {(order.PaymentStatus == PaymentStatus.Paid ? "#155724" : "#856404")}; padding: 4px 8px; border-radius: 12px; font-size: 12px;'>{order.PaymentStatus}</span>
                                                  </td>
                                              </tr>
                                              <tr>
                                                  <td style='color: #666666; font-size: 14px; padding: 8px 0;'><strong>Phương thức thanh toán:</strong></td>
-                                                 <td style='color: #333333; font-size: 14px; padding: 8px 0; text-align: right;'>{order.PaymentMethod}</td>
+                                                 <td style='color: #333333; font-size: 14px; padding: 8px 0; text-align: right;'>{orderLoad.PaymentMethod}</td>
                                              </tr>
                                          </table>
                                      </div>
@@ -156,12 +161,12 @@ public class OrderService(
                                      <div style='background-color: #f8f9ff; border: 1px solid #e1e5e9; padding: 25px; margin: 25px 0; border-radius: 8px;'>
                                          <h3 style='color: #333333; margin: 0 0 15px 0; font-size: 18px;'>🚚 Địa chỉ giao hàng</h3>
                                          <p style='color: #666666; margin: 5px 0; font-size: 14px; line-height: 1.5;'>
-                                             <strong>Địa chỉ:</strong> {order.ShippingAddress}<br>
-                                             <strong>Thành phố:</strong> {order.ShippingCity}<br>
-                                             <strong>Mã bưu điện:</strong> {order.ShippingPostalCode}<br>
-                                             <strong>Số điện thoại:</strong> {order.ShippingPhone}
+                                             <strong>Địa chỉ:</strong> {orderLoad.ShippingAddress}<br>
+                                             <strong>Thành phố:</strong> {orderLoad.ShippingCity}<br>
+                                             <strong>Mã bưu điện:</strong> {orderLoad.ShippingPostalCode}<br>
+                                             <strong>Số điện thoại:</strong> {orderLoad.ShippingPhone}
                                          </p>
-                                         {(string.IsNullOrEmpty(order.Notes) ? "" : $"<p style='color: #666666; margin: 10px 0 0 0; font-size: 14px;'><strong>Ghi chú:</strong> {order.Notes}</p>")}
+                                         {(string.IsNullOrEmpty(orderLoad.Notes) ? "" : $"<p style='color: #666666; margin: 10px 0 0 0; font-size: 14px;'><strong>Ghi chú:</strong> {orderLoad.Notes}</p>")}
                                      </div>
                                      
                                      <!-- Order Items -->
@@ -171,7 +176,7 @@ public class OrderService(
                                          </div>
                                          <div style='padding: 0;'>
                                              <table style='width: 100%; border-collapse: collapse;'>
-                                                 {string.Join("", order.OrderItems.Select(item => $@"""
+                                                 {string.Join("", orderLoad.OrderItems.Select(item => $@"""
                                                  <tr style='border-bottom: 1px solid #f0f0f0;'>
                                                      <td style='padding: 15px; width: 60px;'>
                                                          <img src='cid:image-item' alt='{item.Book.Title}' style='width: 50px; height: 70px; object-fit: cover; border-radius: 4px;'>
