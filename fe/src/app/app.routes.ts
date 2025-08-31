@@ -1,5 +1,7 @@
 import { Routes } from '@angular/router';
 import {authGuard} from './core/guards/auth.guard';
+import {PaymentStartComponent} from './pages/pay/start/payment-start.component';
+import {PaymentCallbackComponent} from './pages/pay/callback/payment-callback.component';
 
 export const routes: Routes = [
   {
@@ -47,8 +49,17 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
-    path: "order",
+    path: "orders/my",
     loadComponent: () => import("./pages/order/orders.component").then((m) => m.OrdersComponent),
+    canActivate: [authGuard]
+  },
+  { path: 'payment/start',
+    component: PaymentStartComponent,
+    canActivate: [authGuard]
+  },
+  {
+    path: 'payment/callback',
+    component: PaymentCallbackComponent,
     canActivate: [authGuard]
   },
   {

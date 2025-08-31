@@ -192,6 +192,12 @@
 
         .payment-icon {
           font-size: 1.5rem;
+
+          svg {
+            width: 1.5rem;
+            height: 1.5rem;
+            display: block;
+          }
         }
       }
     }

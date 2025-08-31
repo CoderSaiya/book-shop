@@ -20,6 +20,7 @@ export interface OrderDetailRes {
   userId: string;
   totalAmount: number;
   status: string;
+  paymentMethod: string;
   paymentStatus: string;
   shippingAddress: string;
   shippingCity: string;
@@ -39,4 +40,5 @@ export interface OrderItemDto {
   quantity: number;
   unitPrice: number;
   totalPrice: number;
+  coverImage: string;
 }

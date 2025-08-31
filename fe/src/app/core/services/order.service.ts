@@ -20,9 +20,15 @@ export class OrdersService {
     return this.http.get<GlobalResponse<OrderDetailRes>>(this.base + `/${id}`);
   }
 
-  getMyOrders(): Observable<OrderDetailRes[]> {
+  getMyOrders(page = 1, pageSize = 20): Observable<OrderDetailRes[]> {
     return this.http
-      .get<GlobalResponse<OrderDetailRes[]>>(`${this.base}/my`, { withCredentials: true })
-      .pipe(map(r => r.data ?? []));
+      .get<OrderDetailRes[] | GlobalResponse<OrderDetailRes[]>>(
+        `${this.base}/my`,
+        {
+          withCredentials: true,
+          params: { page: String(page), pageSize: String(pageSize) }
+        }
+      )
+      .pipe(map((r: any) => (Array.isArray(r) ? r : (r?.data ?? [])) as OrderDetailRes[]));
   }
 }

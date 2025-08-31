@@ -1,7 +1,52 @@
 .orders-page {
   min-height: 100vh;
-  background: var(--background);
+  background: var(--color-background);
   padding: 2rem 0;
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    padding: .55rem 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: .6rem;
+    background: var(--color-secondary);
+    color: var(--color-text-primary);
+    font-weight: 600;
+    font-size: .9rem;
+    cursor: pointer;
+    user-select: none;
+    transition: background .2s, border-color .2s, color .2s, box-shadow .2s, transform .2s;
+
+    &:disabled { opacity: .6; cursor: not-allowed; }
+
+    &.btn-primary {
+      background: var(--color-primary);
+      color: var(--color-secondary);
+      border-color: var(--color-primary);
+      &:hover:not(:disabled) { transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+    }
+
+    &.btn-outline {
+      background: transparent;
+      color: var(--color-text-primary);
+      border-color: var(--color-border);
+      &:hover:not(:disabled) { background: var(--color-surface); }
+    }
+
+    &.btn-ghost {
+      background: transparent;
+      border-color: transparent;
+      &:hover:not(:disabled) { background: var(--color-surface); }
+    }
+
+    &.btn-sm {
+      padding: .4rem .7rem;
+      font-size: .85rem;
+      border-radius: .5rem;
+    }
+  }
 
   .container {
     max-width: 1200px;
@@ -16,13 +61,13 @@
     .page-title {
       font-size: 2.5rem;
       font-weight: 700;
-      color: var(--foreground);
+      color: var(--color-text-primary);
       margin-bottom: 0.5rem;
     }
 
     .page-subtitle {
       font-size: 1.1rem;
-      color: var(--muted-foreground);
+      color: var(--color-text-secondary);
     }
   }
 
@@ -31,9 +76,10 @@
     gap: 2rem;
     margin-bottom: 2rem;
     padding: 1.5rem;
-    background: var(--card);
+    background: var(--color-secondary);
     border-radius: 12px;
-    border: 1px solid var(--border);
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-sm);
 
     .filter-group {
       display: flex;
@@ -43,22 +89,22 @@
       .filter-label {
         font-size: 0.875rem;
         font-weight: 500;
-        color: var(--foreground);
+        color: var(--color-text-primary);
       }
 
       .filter-select {
         padding: 0.5rem 0.75rem;
-        border: 1px solid var(--border);
+        border: 1px solid var(--color-border);
         border-radius: 6px;
-        background: var(--background);
-        color: var(--foreground);
+        background: var(--color-background);
+        color: var(--color-text-primary);
         font-size: 0.875rem;
         min-width: 150px;
 
         &:focus {
           outline: none;
-          border-color: var(--primary);
-          box-shadow: 0 0 0 2px var(--primary)/20;
+          border-color: var(--color-accent);
+          box-shadow: 0 0 0 2px rgba(99, 102, 241, .2); /* accent 20% */
         }
       }
     }
@@ -72,37 +118,54 @@
   .orders-list {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 2rem; /* tách card rõ hơn */
   }
 
   .order-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
+    position: relative;
+    background: var(--color-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: 14px;
     overflow: hidden;
-    transition: all 0.2s ease;
+    transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+    box-shadow: var(--shadow-sm);
 
     &:hover {
-      border-color: var(--primary)/30;
-      box-shadow: 0 4px 12px var(--primary)/10;
+      border-color: var(--color-accent);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-1px);
     }
 
     &.expanded {
-      border-color: var(--primary);
+      border-color: var(--color-accent);
+      box-shadow: var(--shadow-lg);
     }
+
+    /* Stripe màu trạng thái ở mé trái:
+       ➜ Thêm [ngClass]="'status-' + order.status" vào .order-card */
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 6px;
+      background: var(--color-border);
+    }
+    &.status-pending::before    { background: var(--color-warning); }
+    &.status-processing::before { background: var(--color-accent); }
+    &.status-shipped::before    { background: #6366f1; } /* indigo */
+    &.status-delivered::before  { background: var(--color-success); }
+    &.status-cancelled::before  { background: var(--color-error); }
   }
 
   .order-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1.5rem;
+    padding: 1.25rem 1.5rem;
     cursor: pointer;
     transition: background-color 0.2s ease;
 
-    &:hover {
-      background: var(--muted)/50;
-    }
+    &:hover { background: var(--color-surface); }
 
     .order-info {
       display: flex;
@@ -115,15 +178,8 @@
         gap: 0.5rem;
         font-size: 0.875rem;
 
-        .label {
-          color: var(--muted-foreground);
-          font-weight: 500;
-        }
-
-        .value {
-          color: var(--foreground);
-          font-weight: 600;
-        }
+        .label { color: var(--color-text-secondary); font-weight: 500; }
+        .value { color: var(--color-text-primary);   font-weight: 600; }
       }
     }
 
@@ -133,12 +189,10 @@
       align-items: flex-end;
       gap: 0.5rem;
 
-      .order-total {
-        .amount {
-          font-size: 1.25rem;
-          font-weight: 700;
-          color: var(--foreground);
-        }
+      .order-total .amount {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--color-text-primary);
       }
 
       .status-badge {
@@ -149,43 +203,19 @@
         text-transform: uppercase;
         letter-spacing: 0.5px;
 
-        &.status-pending {
-          background: #fef3c7;
-          color: #92400e;
-        }
-
-        &.status-processing {
-          background: #dbeafe;
-          color: #1e40af;
-        }
-
-        &.status-shipped {
-          background: #e0e7ff;
-          color: #5b21b6;
-        }
-
-        &.status-delivered {
-          background: #d1fae5;
-          color: #065f46;
-        }
-
-        &.status-cancelled {
-          background: #fee2e2;
-          color: #991b1b;
-        }
+        &.status-pending   { background: rgba(245, 158, 11, .18); color: #92400e; }
+        &.status-processing{ background: rgba(99, 102, 241, .18); color: #1e1b4b; }
+        &.status-shipped   { background: rgba(99, 102, 241, .15); color: #3730a3; }
+        &.status-delivered { background: rgba(16, 185, 129, .18); color: #065f46; }
+        &.status-cancelled { background: rgba(239, 68, 68,  .18); color: #991b1b; }
       }
     }
 
-    .expand-icon {
-      span {
-        display: inline-block;
-        transition: transform 0.2s ease;
-        color: var(--muted-foreground);
-
-        &.rotated {
-          transform: rotate(180deg);
-        }
-      }
+    .expand-icon span {
+      display: inline-block;
+      transition: transform 0.2s ease;
+      color: var(--color-text-secondary);
+      &.rotated { transform: rotate(180deg); }
     }
 
     @media (max-width: 768px) {
@@ -204,41 +234,38 @@
 
   .order-details {
     padding: 0 1.5rem 1.5rem;
-    border-top: 1px solid var(--border);
-    background: var(--muted)/20;
+    border-top: 1px solid var(--color-border);
+    background: var(--color-surface);
 
     .section-title {
       font-size: 1rem;
       font-weight: 600;
-      color: var(--foreground);
+      color: var(--color-text-primary);
       margin-bottom: 1rem;
       margin-top: 1.5rem;
 
-      &:first-child {
-        margin-top: 1rem;
-      }
+      &:first-child { margin-top: 1rem; }
     }
 
-    .order-items {
-      margin-bottom: 2rem;
-    }
+    .order-items { margin-bottom: 2rem; }
 
     .order-item {
       display: flex;
       gap: 1rem;
       padding: 1rem;
-      background: var(--card);
-      border-radius: 8px;
+      background: var(--color-secondary);
+      border: 1px solid var(--color-border);
+      border-radius: 10px;
       margin-bottom: 0.75rem;
 
       .item-image {
         flex-shrink: 0;
-
         img {
           width: 60px;
           height: 80px;
           object-fit: cover;
-          border-radius: 4px;
+          border-radius: 6px;
+          border: 1px solid var(--color-border);
         }
       }
 
@@ -248,13 +275,13 @@
         .item-title {
           font-size: 1rem;
           font-weight: 600;
-          color: var(--foreground);
+          color: var(--color-text-primary);
           margin-bottom: 0.25rem;
         }
 
         .item-author {
           font-size: 0.875rem;
-          color: var(--muted-foreground);
+          color: var(--color-text-secondary);
           margin-bottom: 0.5rem;
         }
 
@@ -264,14 +291,8 @@
           align-items: center;
           font-size: 0.875rem;
 
-          .quantity {
-            color: var(--muted-foreground);
-          }
-
-          .price {
-            font-weight: 600;
-            color: var(--foreground);
-          }
+          .quantity { color: var(--color-text-secondary); }
+          .price    { font-weight: 700; color: var(--color-text-primary); }
         }
       }
     }
@@ -295,67 +316,38 @@
 
         p {
           margin-bottom: 0.25rem;
-          color: var(--foreground);
+          color: var(--color-text-primary);
 
-          &.recipient-name {
-            font-weight: 600;
-          }
-
-          &.phone {
-            color: var(--muted-foreground);
-          }
+          &.recipient-name { font-weight: 600; }
+          &.phone          { color: var(--color-text-secondary); }
         }
       }
 
       .tracking-title {
         font-size: 0.875rem;
         font-weight: 600;
-        color: var(--foreground);
+        color: var(--color-text-primary);
         margin-top: 1rem;
         margin-bottom: 0.5rem;
       }
 
       .tracking-number {
-        font-family: monospace;
-        background: var(--muted);
-        padding: 0.5rem;
-        border-radius: 4px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        background: var(--color-surface);
+        padding: 0.5rem .6rem;
+        border-radius: 6px;
+        border: 1px solid var(--color-border);
         font-size: 0.875rem;
       }
     }
 
     .order-actions {
       display: flex;
-      gap: 1rem;
+      gap: .75rem;
       flex-wrap: wrap;
 
-      .btn {
-        padding: 0.5rem 1rem;
-        border-radius: 6px;
-        font-size: 0.875rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        border: none;
-
-        &.btn-primary {
-          background: var(--primary);
-          color: var(--primary-foreground);
-
-          &:hover {
-            background: var(--primary)/90;
-          }
-        }
-
-        &.btn-outline {
-          background: transparent;
-          color: var(--foreground);
-          border: 1px solid var(--border);
-
-          &:hover {
-            background: var(--muted);
-          }
-        }
+      .btn { /* dùng style .btn ở trên, thêm tweak nhỏ */
+        box-shadow: var(--shadow-sm);
       }
     }
   }
@@ -364,36 +356,75 @@
     text-align: center;
     padding: 4rem 2rem;
 
-    .no-orders-icon {
-      font-size: 4rem;
-      margin-bottom: 1rem;
-    }
+    .no-orders-icon { font-size: 4rem; margin-bottom: 1rem; }
 
     .no-orders-title {
       font-size: 1.5rem;
       font-weight: 600;
-      color: var(--foreground);
+      color: var(--color-text-primary);
       margin-bottom: 0.5rem;
     }
 
-    .no-orders-message {
-      color: var(--muted-foreground);
-      margin-bottom: 2rem;
-    }
+    .no-orders-message { color: var(--color-text-secondary); margin-bottom: 2rem; }
 
     .btn {
       padding: 0.75rem 1.5rem;
-      background: var(--primary);
-      color: var(--primary-foreground);
+      background: var(--color-primary);
+      color: var(--color-secondary);
       border: none;
       border-radius: 6px;
-      font-weight: 500;
+      font-weight: 600;
       text-decoration: none;
-      display: inline-block;
-      transition: background-color 0.2s ease;
+      display: inline-flex;
+      transition: transform .2s ease, box-shadow .2s ease;
 
-      &:hover {
-        background: var(--primary)/90;
+      &:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+    }
+  }
+
+  /* ==== Pagination bar (nếu bạn render phân trang) ==== */
+  .pagination-bar {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: var(--color-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    box-shadow: var(--shadow-sm);
+
+    .page-info {
+      color: var(--color-text-secondary);
+      font-size: .9rem;
+    }
+
+    .page-actions {
+      display: flex;
+      gap: .5rem;
+
+      .page-btn {
+        min-width: 36px;
+        height: 36px;
+        padding: 0 .6rem;
+        border-radius: 8px;
+        border: 1px solid var(--color-border);
+        background: var(--color-secondary);
+        color: var(--color-text-primary);
+        font-weight: 600;
+        cursor: pointer;
+        transition: background .2s, border-color .2s, transform .2s;
+
+        &:hover { background: var(--color-surface); }
+        &.active {
+          border-color: var(--color-accent);
+          box-shadow: 0 0 0 2px rgba(99, 102, 241, .15);
+        }
+        &:disabled {
+          opacity: .5;
+          cursor: not-allowed;
+        }
       }
     }
   }

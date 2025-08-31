@@ -22,13 +22,16 @@ export class SsoSuccessComponent implements OnInit {
   private auth = inject(AuthService);
   private router = inject(Router);
 
-  ngOnInit(): void {
-    // lấy access_token từ fragment và lưu
-    this.auth.storeAccessTokenFromFragment(window.location.hash);
-    // đồng bộ user
-    this.auth.fetchMe().subscribe({
-      next: () => this.router.navigateByUrl('/'),
-      error: () => this.router.navigate(['/auth/login'], { queryParams: { error: 'sso_failed' } }),
-    });
+  async ngOnInit(): Promise<void> {
+    const ok = this.auth.storeAccessTokenFromFragment(window.location.hash);
+
+    history.replaceState(null, '', location.pathname + location.search);
+
+    if (!ok) {
+      this.router.navigate(['/auth/login'], { queryParams: { error: 'sso_missing_token' } });
+      return;
+    }
+
+    this.router.navigateByUrl('/');
   }
 }

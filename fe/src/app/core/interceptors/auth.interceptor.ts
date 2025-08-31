@@ -21,14 +21,23 @@ export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
   const isApi = req.url.startsWith(environment.apiUrl);
 
-  // Gửi/nhận cookie refresh (HttpOnly) => withCredentials
+  const isRefresh = isApi && req.url.includes('/api/auth/refresh-token');
+
+  // Gửi/nhận cookie refresh (HttpOnly)
   let handled = isApi ? req.clone({ withCredentials: true }) : req;
-  handled = isApi ? withAuth(handled, auth.accessToken) : handled;
+  handled = (isApi && !isRefresh) ? withAuth(handled, auth.accessToken) : handled;
 
   return next(handled).pipe(
     catchError((err: HttpErrorResponse) => {
-      // Không phải request tới API hoặc không phải 401 thì trả lỗi luôn
       if (!isApi || err.status !== 401) return throwError(() => err);
+
+      if (isRefresh) {
+        auth.clearSession();
+        router.navigate(['/auth/login']);
+        return throwError(() => err);
+      }
+
+      if (err.status !== 401) return throwError(() => err);
 
       // Nếu đang refresh: đợi token mới rồi retry
       if (refreshInProgress) {
@@ -48,9 +57,8 @@ export const AuthInterceptor: HttpInterceptorFn = (req, next) => {
         }),
         switchMap(() => next(withAuth(handled, auth.accessToken))), // retry request cũ
         catchError(refreshErr => {
-          // refresh thất bại -> xóa token, điều hướng login
           refreshInProgress = false;
-          auth.clearToken();
+          auth.clearSession();
           router.navigate(['/auth/login']);
           return throwError(() => refreshErr);
         })

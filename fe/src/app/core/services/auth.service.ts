@@ -142,10 +142,31 @@ export class AuthService {
     window.location.href = `${this.authUrl}/external/${provider}/start?returnUrl=${encodeURIComponent(returnUrl)}`;
   }
 
-  storeAccessTokenFromFragment(hash: string) {
-    const params = new URLSearchParams(hash.replace(/^#/, ''));
-    const access = params.get('access_token');
-    if (access) this.setAccessToken(access);
+  storeAccessTokenFromFragment(hash: string): boolean {
+    if (!hash) return false;
+    if (!hash.startsWith('#')) hash = '#' + hash;
+    const params = new URLSearchParams(hash.substring(1));
+
+    const authPayload = params.get('auth');
+    if (authPayload) {
+      try {
+        const json = JSON.parse(
+          decodeURIComponent(escape(atob(authPayload.replace(/-/g, '+').replace(/_/g, '/'))))
+        );
+
+        const token = json.access_token as string | undefined;
+
+        if (!token) return false;
+
+        this.setAccessToken(token);
+        console.log(json.user)
+        this.setCurrentUser(json.user);
+        return true;
+      } catch {
+        return false;
+      }
+    }
+    return false;
   }
 
   clearToken() { this.setAccessToken(null); }
