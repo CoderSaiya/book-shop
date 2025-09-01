@@ -55,6 +55,7 @@ public static class DependencyInjection
         services.AddScoped<IReviewRepository, ReviewRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<ICartRepository, CartRepository>();
+        services.AddScoped<ICouponRepository, CouponRepository>();
         services.AddScoped<ITranslationStore, EfTranslationStore>();
         services.AddScoped<IEntityLocalizer, EntityLocalizer>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -68,6 +69,7 @@ public static class DependencyInjection
         services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped<ICartService, CartService>();
         services.AddScoped<IBookService, BookService>();
+        services.AddScoped<ICouponService, CouponService>();
         services.AddSingleton<IMailSender, EmailSender>();
         services.AddScoped<ITextHasher, Sha256TextHasher>();
         services.AddHttpClient<ITranslator, AzureTranslator>();

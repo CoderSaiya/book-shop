@@ -24,6 +24,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<OrderItem> OrderItems { get; set; }
     public DbSet<Review> Reviews { get; set; }
     public DbSet<TranslationEntry> Translations { get; set; }
+    public DbSet<Coupon> Coupons { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -99,6 +100,27 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .Property(x => x.CoverThumbs)
             .HasConversion(arrConv)
             .Metadata.SetValueComparer(arrCmp);
+        
+        modelBuilder.Entity<Coupon>(b =>
+        {
+            b.HasIndex(x => new
+            {
+                x.UserId,
+                x.Code
+            }).IsUnique();
+            
+            b.Property(x => x.Code)
+                .IsUnicode(false);
+            
+            b.Property(x => x.Value)
+                .HasPrecision(18, 2);
+            
+            b.Property(x => x.MaxDiscountAmount)
+                .HasPrecision(18, 2);
+            
+            b.Property(x => x.MinSubtotal)
+                .HasPrecision(18, 2);
+        });
         
         // Relations
         modelBuilder.Entity<User>()
