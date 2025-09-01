@@ -14,6 +14,7 @@ import { LocationService, Province, District, Ward } from '../../core/services/l
 import { parseVietnamAddress, looseEqualsName, joinVietnamAddress } from '../../shared/utils/address';
 import {CreateOrderReq} from "../../models/order.model";
 import {OrdersService} from "../../core/services/order.service";
+import {CouponService, EligibleCouponRes} from '../../core/services/coupon.service';
 
 interface CartItem {
   book: any;
@@ -296,6 +297,39 @@ interface CartItem {
 
           <!-- Order Summary -->
           <div class="order-summary">
+            <div class="coupon-box">
+              <label class="section-title" style="display:block;margin-bottom:.75rem">Mã giảm giá</label>
+
+              <div *ngIf="loadingCoupons(); else couponsReady" class="text-muted">Đang tải mã…</div>
+              <ng-template #couponsReady>
+                <ng-container *ngIf="eligibleCoupons().length; else noCoupon">
+                  <select class="form-input" [(ngModel)]="selectedCode" (change)="applySelectedCoupon()">
+                    <option [ngValue]="null">-- Chọn mã --</option>
+                    <option *ngFor="let c of eligibleCoupons()" [ngValue]="c.code">
+                      {{ c.code }} ({{ couponLabel(c) }})
+                      <ng-container *ngIf="c.minSubtotal">
+                        – tối thiểu {{ c.minSubtotal | number:'1.0-0' }}đ
+                      </ng-container>
+                      – giảm {{ c.discount | number:'1.0-0' }}đ
+                    </option>
+                  </select>
+
+                  <div class="coupon-chip" *ngIf="selectedCode">
+                    <span class="coupon-chip__text">
+                      {{ selectedCode }}
+                      <ng-container *ngIf="discount() > 0">
+                        — giảm {{ discount() | number:'1.0-0' }}đ
+                      </ng-container>
+                    </span>
+                    <button type="button" class="coupon-chip__close" (click)="clearCoupon()" aria-label="Bỏ mã">×</button>
+                  </div>
+                </ng-container>
+                <ng-template #noCoupon>
+                  <div class="text-muted">Không có mã phù hợp với đơn hiện tại.</div>
+                </ng-template>
+              </ng-template>
+            </div>
+
             <div class="summary-card">
               <h3 class="summary-title">{{ 'checkout.orderSummary' | translate }}</h3>
 
@@ -344,11 +378,20 @@ interface CartItem {
                   </span>
                 </div>
 
+                <div class="summary-row" *ngIf="discount() > 0">
+                  <span>Giảm giá</span>
+                  <span>-
+                    {{ getCurrentLang() === 'en' ? '$' : '' }}
+                    {{ discount() | number:'1.0-0' }}
+                    {{ getCurrentLang() === 'vi' ? ' ₫' : '' }}
+                  </span>
+                </div>
+
                 <div class="summary-row total">
                   <span>{{ 'checkout.total' | translate }}</span>
                   <span>
                     {{ getCurrentLang() === 'en' ? '$' : '' }}
-                    {{ total() | number:'1.0-0' }}
+                    {{ payable() | number:'1.0-0' }}
                     {{ getCurrentLang() === 'vi' ? ' ₫' : '' }}
                   </span>
                 </div>
@@ -379,11 +422,18 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   private auth = inject(AuthService);
   private orders = inject(OrdersService);
   private loc = inject(LocationService);
+  private coupons = inject(CouponService);
 
   user: User | null = null;
 
   cartItems = signal<CartItem[]>([]);
   isProcessing = signal(false);
+
+  eligibleCoupons = signal<EligibleCouponRes[]>([]);
+  selectedCode: string | null = null;
+  discount = signal<number>(0);
+  couponMsg = signal<string>('');
+  loadingCoupons = signal<boolean>(false);
 
   // address lists
   provinces: Province[] = [];
@@ -415,6 +465,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   shipping = computed(() => (this.subtotal() > 500_000 ? 0 : 25_000));
   tax = computed(() => Math.round(this.subtotal() * 0.08));
   total = computed(() => this.subtotal() + this.shipping() + this.tax());
+  payable = computed(() => Math.max(this.total() - this.discount(), 0));
 
   ngOnInit(): void {
     // Cart
@@ -423,6 +474,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       .subscribe(items => {
         this.cartItems.set(items);
         if (!items.length) this.router.navigate(['/cart']);
+        this.refreshCoupons();
       });
 
     // User & prefill
@@ -431,6 +483,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       .subscribe(u => {
         this.user = u;
         if (u) this.fillFormFromUser(u);
+        this.refreshCoupons();
       });
 
     if (!this.auth.currentUser && this.auth.accessToken) {
@@ -457,6 +510,51 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.destroy$.next(); this.destroy$.complete();
+  }
+
+  private refreshCoupons() {
+    if (!this.user) {
+      this.eligibleCoupons.set([]);
+      this.clearCoupon();
+      return;
+    }
+    const sub = this.subtotal();
+    this.loadingCoupons.set(true);
+
+    this.coupons.eligible(sub)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(list => {
+        this.eligibleCoupons.set(list);
+
+        // Nếu code đang chọn không còn trong danh sách hợp lệ => clear
+        if (this.selectedCode && !list.some(x => x.code === this.selectedCode)) {
+          this.clearCoupon();
+        } else if (this.selectedCode) {
+          this.applySelectedCoupon(); // cập nhật discount theo bản mới nhất
+        }
+        this.loadingCoupons.set(false);
+      });
+  }
+
+  applySelectedCoupon() {
+    if (!this.selectedCode) { this.clearCoupon(); return; }
+    const hit = this.eligibleCoupons().find(x => x.code === this.selectedCode);
+    if (!hit) { this.clearCoupon(); return; }
+
+    this.discount.set(hit.discount || 0);
+    this.couponMsg.set(hit.code || '');
+  }
+
+  clearCoupon(msg: string = '') {
+    this.selectedCode = null;
+    this.discount.set(0);
+    this.couponMsg.set(msg);
+  }
+
+  couponLabel(c: EligibleCouponRes) {
+    return (String(c.type).toLowerCase() === 'percentage')
+      ? `-${c.value}%`
+      : `-${(c.value ?? 0).toLocaleString('vi-VN')}đ`;
   }
 
   private fillFormFromUser(u: User): void {
@@ -680,7 +778,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
         return;
       }
 
-      const amount = this.total(); // số tiền VND
+      const amount = this.payable();
       this.router.navigate(
         ['/payment/start'],
         {
