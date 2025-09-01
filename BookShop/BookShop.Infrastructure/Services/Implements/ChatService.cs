@@ -62,11 +62,13 @@ public class ChatService(
     private async Task<ChatBotRes> HandleRecommend(string text, string intent, float conf)
     {
         var (min, max) = IntentHelper.ExtractPriceRange(text);
+        Console.Write("min:" + max + " max: " + max);
         
         var catNames = IntentHelper.ExtractCategoryNames(text);
         var catMaps  = (catNames.Count > 0) ? await categoryService.MapNamesToIdsAsync(catNames) : [];
         
         List<BookRes> top;
+        bool exactFound;
 
         if (catMaps.Count > 0)
         {
@@ -75,13 +77,15 @@ public class ChatService(
                     categoryIds: catMaps.Select(c => c.Id),
                     limit: 8,
                     minPrice: min, maxPrice: max,
-                    keyword: text))
+                    keyword: ""))
                 .ToList();
+            
+            exactFound = top.Count > 0;
         }
         else
         {
             // fallback: logic cũ theo keyword
-            var results = await bookService.Search(text, page: 1, pageSize: 40);
+            var results = await bookService.Search(page: 1, pageSize: 40);
             var filtered = results;
 
             if (min is not null || max is not null)
@@ -96,25 +100,44 @@ public class ChatService(
             }
 
             top = filtered.Take(8).ToList();
+            exactFound = top.Count > 0;
         }
 
-        if (top.Count == 0)
+        if (!exactFound)
         {
-            var trend = await bookService.GetTrendingAsync(days: 30, limit: 8);
-            top = trend.ToList();
+            var suggest = await bookService.GetTrendingAsync(days: 30, limit: 8);
+
+            string catText = (catMaps.Count > 0)
+                ? $" theo thể loại {string.Join(", ", catMaps.Select(c => c.Name))}"
+                : "";
+
+            string missText = (min, max) switch
+            {
+                (not null, not null) => $"Mình không tìm thấy sách{catText} trong tầm giá {min:N0}–{max:N0}đ.",
+                (not null, null) => $"Mình không tìm thấy sách{catText} từ khoảng {min:N0}đ trở lên.",
+                (null, not null) => $"Mình không tìm thấy sách{catText} dưới {max:N0}đ.",
+                _ => $"Mình chưa tìm thấy sách phù hợp{catText}."
+            };
+
+            return new ChatBotRes(
+                Text: missText + " Bạn có thể tham khảo những cuốn phổ biến sau:",
+                Intent: intent,
+                Confidence: conf,
+                Books: suggest.Select(b => new { b.BookId, b.Title, b.Price, b.Images })
+            );
         }
 
         // build câu trả lời
-        string catText = (catMaps.Count > 0)
+        string catText2 = (catMaps.Count > 0)
             ? $" theo thể loại {string.Join(", ", catMaps.Select(c => c.Name))}"
             : "";
 
         var textOut = (min, max) switch
         {
-            (not null, not null) => $"Mình gợi ý vài cuốn{catText} trong khoảng {min:N0}–{max:N0}đ:",
-            (not null, null) => $"Mình gợi ý vài cuốn{catText} từ khoảng {min:N0}đ:",
-            (null, not null) => $"Mình gợi ý vài cuốn{catText} dưới {max:N0}đ:",
-            _ => $"Mình gợi ý vài cuốn{catText} phù hợp:"
+            (not null, not null) => $"Mình gợi ý vài cuốn{catText2} trong khoảng {min:N0}–{max:N0}đ:",
+            (not null, null) => $"Mình gợi ý vài cuốn{catText2} từ khoảng {min:N0}đ:",
+            (null, not null) => $"Mình gợi ý vài cuốn{catText2} dưới {max:N0}đ:",
+            _ => $"Mình gợi ý vài cuốn{catText2} phù hợp:"
         };
 
         return new ChatBotRes(

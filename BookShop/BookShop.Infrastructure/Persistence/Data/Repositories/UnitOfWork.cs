@@ -12,7 +12,9 @@ public class UnitOfWork(
     ICategoryRepository categories,
     IOrderRepository orders,
     ICartRepository carts,
-    IReviewRepository reviews) : IUnitOfWork
+    IReviewRepository reviews,
+    ICouponRepository coupons
+    ) : IUnitOfWork
 {
     public IAuthorRepository Authors { get; } = authors;
     public IBookRepository Books { get; } = books;
@@ -23,6 +25,7 @@ public class UnitOfWork(
     public IOrderRepository Orders { get; } = orders;
     public ICartRepository Carts { get; } = carts;
     public IReviewRepository Reviews { get; } = reviews;
+    public ICouponRepository Coupons { get; } = coupons;
 
     public async Task<int> SaveAsync()
         => await context.SaveChangesAsync();

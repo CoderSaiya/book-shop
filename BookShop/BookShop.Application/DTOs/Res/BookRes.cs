@@ -10,7 +10,7 @@ public record BookRes(
     decimal Price,
     int Sale,
     decimal CurrentPrice,
-    List<string> Images,
+    IReadOnlyList<string> Images,
     string PublishedDate,
     bool IsSold,
     CategoryDto Category

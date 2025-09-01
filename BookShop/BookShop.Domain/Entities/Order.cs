@@ -74,7 +74,9 @@ namespace BookShop.Domain.Entities
         DebitCard = 2,
         BankTransfer = 3,
         PayPal = 4,
-        Stripe = 5
+        Stripe = 5,
+        Momo = 6,
+        VnPay = 7
     }
 
     public enum PaymentStatus

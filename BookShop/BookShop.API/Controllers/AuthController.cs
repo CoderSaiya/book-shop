@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Security.Claims;
+using System.Text.Json;
 using BookShop.Application.DTOs.Req;
 using BookShop.Application.DTOs.Res;
 using BookShop.Application.Interface;
@@ -7,6 +8,7 @@ using BookShop.Domain.Common;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
 
 namespace BookShop.API.Controllers;
 
@@ -39,7 +41,7 @@ public class AuthController(
         var res = await authService.LoginAsync(req);
 
         var isDev = env.IsDevelopment();
-        Response.Cookies.Append("rt", res.RefreshToken, new CookieOptions
+        Response.Cookies.Append("refresh_token", res.RefreshToken, new CookieOptions
         {
             HttpOnly = true,
             Secure = !isDev,
@@ -70,7 +72,7 @@ public class AuthController(
     public IActionResult Logout()
     {
         var isDev = env.IsDevelopment();
-        Response.Cookies.Delete("rt", new CookieOptions
+        Response.Cookies.Delete("refresh_token", new CookieOptions
         {
             HttpOnly = true,
             Secure = !isDev,
@@ -131,10 +133,10 @@ public class AuthController(
         if (!result.Succeeded)
             return Redirect($"{cfg["FrontendBaseUrl"]}/auth/login?error=external_failed");
 
-        var principal   = result.Principal!;
-        var email       = principal.FindFirst(ClaimTypes.Email)?.Value;
+        var principal = result.Principal!;
+        var email = principal.FindFirst(ClaimTypes.Email)?.Value;
         var providerKey = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        var provider    = result.Ticket!.AuthenticationScheme; // "Google" | "GitHub"
+        var provider = result.Ticket!.AuthenticationScheme; // "Google" | "GitHub"
 
         if (string.IsNullOrEmpty(providerKey))
             return Redirect($"{cfg["FrontendBaseUrl"]}/auth/login?error=missing_provider_key");
@@ -151,16 +153,24 @@ public class AuthController(
             Path = "/",
             Expires = DateTimeOffset.UtcNow.AddDays(7)
         });
+        
+        var userDto = await auth.GetCurrentUserAsync(user.Id);
+        var payload = new {
+            access_token = issued.AccessToken,
+            expires_at = issued.AccessExpiresAt.ToUnixTimeSeconds(),
+            token_type = "Bearer",
+            user = userDto
+        };
+        var json = JsonSerializer.Serialize(payload, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+        var b64 = WebEncoders.Base64UrlEncode(System.Text.Encoding.UTF8.GetBytes(json));
 
         // access token trả về FE qua fragment
         var successUrl = string.IsNullOrEmpty(returnUrl)
             ? $"{cfg["FrontendBaseUrl"]}/auth/sso/success"
             : returnUrl!;
-        var redirectWithToken =
-            $"{successUrl}#access_token={WebUtility.UrlEncode(issued.AccessToken)}" +
-            $"&expires_at={issued.AccessExpiresAt.ToUnixTimeSeconds()}&token_type=Bearer";
+        var redirectWithPayload = $"{successUrl}#auth={b64}";
 
         await HttpContext.SignOutAsync("External");
-        return Redirect(redirectWithToken);
+        return Redirect(redirectWithPayload);
     }
 }

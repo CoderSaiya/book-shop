@@ -11,6 +11,7 @@ public interface IUnitOfWork
     IOrderRepository Orders { get; }
     ICartRepository Carts { get; }
     IReviewRepository Reviews { get; }
+    ICouponRepository Coupons { get; }
     
     Task<int> SaveAsync();
 }

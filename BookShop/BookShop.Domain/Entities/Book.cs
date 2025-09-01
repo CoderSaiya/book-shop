@@ -25,6 +25,8 @@ public class Book
     public int Stock { get; set; } = 0;
     [Required]
     public string[] CoverImage { get; set; } = null!;
+    public string[] CoverThumbs { get; set; } = [];
+    public string? PrimaryThumb { get; set; }
     [Required]
     public DateTime PublishedDate { get; set; } = DateTime.Now;
     

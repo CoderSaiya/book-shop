@@ -28,7 +28,9 @@ public class PaymentMethodHelper
         ["bank"] = PaymentMethod.BankTransfer,
 
         ["paypal"] = PaymentMethod.PayPal,
-        ["stripe"] = PaymentMethod.Stripe
+        ["stripe"] = PaymentMethod.Stripe,
+        ["momo"] = PaymentMethod.Momo,
+        ["vnpay"] = PaymentMethod.VnPay
     };
     
     public static PaymentMethod ParseOrThrow(string? input)

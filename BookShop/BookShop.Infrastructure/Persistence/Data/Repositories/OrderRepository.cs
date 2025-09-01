@@ -24,11 +24,13 @@ public class OrderRepository(AppDbContext context) : GenericRepository<Order>(co
             .Include(o => o.User)
             .Include(o => o.OrderItems)
             .ThenInclude(ot => ot.Book)
-            .AsNoTracking()
+            // .AsNoTracking()
             .FirstOrDefaultAsync(o => o.Id == id);
 
     public async Task<IReadOnlyList<Order>> GetByUserAsync(Guid userId, int page = 1, int pageSize = 20) =>
         await _context.Orders
+            .Include(o => o.OrderItems)
+            .ThenInclude(ot => ot.Book)
             .Where(o => o.UserId == userId)
             .OrderByDescending(o => o.CreatedAt)
             .Skip((page - 1) * pageSize)

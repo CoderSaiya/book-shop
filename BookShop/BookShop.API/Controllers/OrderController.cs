@@ -37,8 +37,8 @@ public class OrderController(IOrderService svc) : Controller
 
     [HttpGet("my")]
     [Authorize]
-    [ProducesResponseType(typeof(IReadOnlyList<OrderSummaryRes>), StatusCodes.Status200OK)]
-    public Task<IReadOnlyList<OrderSummaryRes>> GetMine(
+    [ProducesResponseType(typeof(IReadOnlyList<OrderDetailRes>), StatusCodes.Status200OK)]
+    public Task<IReadOnlyList<OrderDetailRes>> GetMine(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20)
         => svc.GetByUserAsync(User.GetUserId(), page, pageSize);

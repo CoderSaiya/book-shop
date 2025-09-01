@@ -1,7 +1,10 @@
 ﻿using BookShop.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using BookShop.Domain.Views;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace BookShop.Infrastructure.Persistence.Data;
 
@@ -21,6 +24,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<OrderItem> OrderItems { get; set; }
     public DbSet<Review> Reviews { get; set; }
     public DbSet<TranslationEntry> Translations { get; set; }
+    public DbSet<Coupon> Coupons { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -74,6 +78,49 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         
         modelBuilder.Entity<Publisher>()
             .OwnsOne(p => p.Address);
+        
+        var jsonOpts = new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull };
+        
+        var arrConv = new ValueConverter<string[], string>(
+            v => JsonSerializer.Serialize(v, jsonOpts),
+            v => JsonSerializer.Deserialize<string[]>(v, jsonOpts) ?? Array.Empty<string>());
+        
+        var arrCmp = new ValueComparer<string[]>(
+            (a, c) => a != null && c != null && a.SequenceEqual(c),
+            v => v.Aggregate(0, (h, s) => HashCode.Combine(h, s.GetHashCode())),
+            v => v.ToArray()
+        );
+        
+        modelBuilder.Entity<Book>()
+            .Property(x => x.CoverImage)
+            .HasConversion(arrConv)
+            .Metadata.SetValueComparer(arrCmp);
+        
+        modelBuilder.Entity<Book>()
+            .Property(x => x.CoverThumbs)
+            .HasConversion(arrConv)
+            .Metadata.SetValueComparer(arrCmp);
+        
+        modelBuilder.Entity<Coupon>(b =>
+        {
+            b.HasIndex(x => new
+            {
+                x.UserId,
+                x.Code
+            }).IsUnique();
+            
+            b.Property(x => x.Code)
+                .IsUnicode(false);
+            
+            b.Property(x => x.Value)
+                .HasPrecision(18, 2);
+            
+            b.Property(x => x.MaxDiscountAmount)
+                .HasPrecision(18, 2);
+            
+            b.Property(x => x.MinSubtotal)
+                .HasPrecision(18, 2);
+        });
         
         // Relations
         modelBuilder.Entity<User>()

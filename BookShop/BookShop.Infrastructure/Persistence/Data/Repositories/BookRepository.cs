@@ -1,5 +1,6 @@
 ﻿using BookShop.Domain.Entities;
 using BookShop.Domain.Interfaces;
+using BookShop.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace BookShop.Infrastructure.Persistence.Data.Repositories;
@@ -20,8 +21,10 @@ public class BookRepository(AppDbContext context) : GenericRepository<Book>(cont
             .ToList();
         
         var q = _context.BookSearches
-            .FromSqlRaw(@"SELECT BookId, Title, AuthorName, PublisherName 
-                      FROM dbo.vwBookSearch WITH (NOEXPAND)")
+            .FromSqlRaw(@"
+                SELECT BookId, Title, AuthorName, PublisherName
+                FROM dbo.vwBookSearch
+            ")
             .AsNoTracking();
         
         foreach (var p in words)
@@ -46,8 +49,9 @@ public class BookRepository(AppDbContext context) : GenericRepository<Book>(cont
             .Include(b => b.Author)
             .Include(b => b.Publisher)
             .Include(b => b.Category)
-            .Include(b => b.Reviews)
             .Where(b => hits.Contains(b.Id))
+            .AsListLean()
+            .AsNoTracking()
             .ToListAsync();
 
         return books;
@@ -59,6 +63,7 @@ public class BookRepository(AppDbContext context) : GenericRepository<Book>(cont
             .Include(b => b.Author)
             .Include(b => b.Publisher)
             .Include(b => b.Category)
+            .AsListLean()
             .FirstOrDefaultAsync(b => b.Id == id);
     }
 
@@ -111,6 +116,7 @@ public class BookRepository(AppDbContext context) : GenericRepository<Book>(cont
             .Include(b => b.Author)
             .Include(b => b.Publisher)
             .Include(b => b.Category)
+            .AsListLean()
             .AsNoTracking()
             .Take(limit)
             .ToListAsync();
@@ -152,11 +158,13 @@ public class BookRepository(AppDbContext context) : GenericRepository<Book>(cont
     public async Task<IEnumerable<Book>> GetByAuthorAsync(Guid authorId) =>
         await _context.Books
             .Where(b => b.AuthorId == authorId)
+            .AsListLean()
             .ToListAsync();
 
     public async Task<IEnumerable<Book>> GetByPublisher(Guid publisherId) =>
         await _context.Books
             .Where(b => b.PublisherId == publisherId)
+            .AsListLean()
             .ToListAsync();
 
     public async Task<IReadOnlyList<Book>> GetRelatedAsync(Guid bookId, int days = 180, int limit = 12)

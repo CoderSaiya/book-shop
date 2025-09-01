@@ -19,7 +19,7 @@ public class User
     public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
     
     // Navigation properties
-    public Cart? Cart { get; set; }
+    public Cart? Cart { get; set; } = new();
     public ICollection<Order> Orders { get; set; } = new List<Order>();
     public ICollection<Review> Reviews { get; set; } = new List<Review>();
 }
