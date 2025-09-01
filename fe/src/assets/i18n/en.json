@@ -196,7 +196,8 @@
       "continueShopping": "Continue Shopping",
       "needHelp": "Need help with your order?",
       "contactSupport": "Contact our support team"
-    }
+    },
+    "postalCode": "Postal code"
   },
   "auth": {
     "login": "Login",
@@ -282,5 +283,36 @@
     "reset": "Reset",
     "showMore": "Show More",
     "showLess": "Show Less"
+  },
+  "orders": {
+    "title": "Your Orders",
+    "subtitle": "Your Orders",
+    "filterByStatus": "Status",
+    "allOrders": "All",
+    "status": {
+      "pending": "Pending",
+      "processing": "Processing",
+      "shipped": "Shipped",
+      "delivered": "Delivered",
+      "cancelled": "Cancelled"
+    },
+    "sortBy": "Sort by",
+    "sort": {
+      "dateDesc": "Date - Desc",
+      "dateAsc": "Date - Asc",
+      "totalDesc": "Total - Desc",
+      "totalAsc": "Total - Asc"
+    },
+    "orderNumber": "Order number",
+    "orderDate": "Order Date",
+    "items": "Items",
+    "shippingAddress": "Shipping Address",
+    "phone": "Phone",
+    "reorder": "Reorder",
+    "cancelOrder": "Cancel",
+    "paymentMethod": "Payment method",
+    "noOrders": "No Orders",
+    "noOrdersMessage": "No order found or order is being created, please wait a few minutes!",
+    "startShopping": "Start shopping!"
   }
 }

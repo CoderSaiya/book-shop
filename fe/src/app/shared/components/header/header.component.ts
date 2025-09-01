@@ -75,7 +75,7 @@ import { takeUntil } from "rxjs/operators"
                   <a routerLink="/profile" class="dropdown-item" (click)="closeUserMenu()">
                     {{ 'nav.profile' | translate }}
                   </a>
-                  <a routerLink="/orders" class="dropdown-item" (click)="closeUserMenu()">
+                  <a routerLink="/orders/my" class="dropdown-item" (click)="closeUserMenu()">
                     {{ 'nav.orders' | translate }}
                   </a>
                   <div class="dropdown-divider"></div>

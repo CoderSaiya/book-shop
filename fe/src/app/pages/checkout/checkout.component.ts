@@ -14,6 +14,7 @@ import { LocationService, Province, District, Ward } from '../../core/services/l
 import { parseVietnamAddress, looseEqualsName, joinVietnamAddress } from '../../shared/utils/address';
 import {CreateOrderReq} from "../../models/order.model";
 import {OrdersService} from "../../core/services/order.service";
+import {CouponService, EligibleCouponRes} from '../../core/services/coupon.service';
 
 interface CartItem {
   book: any;
@@ -194,28 +195,64 @@ interface CartItem {
 
                 <div class="payment-methods">
                   <label class="payment-option">
-                    <input type="radio" name="paymentMethod" [(ngModel)]="form.paymentMethod" value="credit-card"/>
+                    <input type="radio" name="paymentMethod" [(ngModel)]="form.paymentMethod" value="momo"/>
                     <div class="payment-content">
-                      <span class="payment-icon">💳</span>
-                      <span>{{ 'checkout.creditCard' | translate }}</span>
+                      <span class="payment-icon" title="MoMo" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+                          <rect x="0" y="0" width="48" height="48" rx="12" fill="#A50064"/>
+                          <text x="24" y="19" fill="#fff" font-size="16" font-weight="900" text-anchor="middle"
+                                font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif">mo</text>
+                          <text x="24" y="36" fill="#fff" font-size="16" font-weight="900" text-anchor="middle"
+                                font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif">mo</text>
+                        </svg>
+                      </span>
+                      <span>MoMo</span>
                     </div>
                   </label>
 
                   <label class="payment-option">
-                    <input type="radio" name="paymentMethod" [(ngModel)]="form.paymentMethod" value="paypal"/>
+                    <input type="radio" name="paymentMethod" [(ngModel)]="form.paymentMethod" value="vnpay"/>
                     <div class="payment-content">
-                      <span class="payment-icon">🅿️</span>
-                      <span>PayPal</span>
+                      <span class="payment-icon" title="VNPAY" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+                          <rect x="0" y="0" width="48" height="48" rx="12" fill="#ffffff"/>
+                          <g transform="translate(24,22)">
+                            <g transform="rotate(45)">
+                              <rect x="-9" y="-9" width="18" height="18" rx="3" fill="#E41E2A"/>
+                            </g>
+                            <g transform="rotate(-45)">
+                              <rect x="-9" y="-9" width="18" height="18" rx="3" fill="#00479B"/>
+                            </g>
+                          </g>
+                        </svg>
+                      </span>
+                      <span>VnPay</span>
                     </div>
                   </label>
 
-                  <label class="payment-option">
-                    <input type="radio" name="paymentMethod" [(ngModel)]="form.paymentMethod" value="bank-transfer"/>
-                    <div class="payment-content">
-                      <span class="payment-icon">🏦</span>
-                      <span>{{ 'checkout.bankTransfer' | translate }}</span>
-                    </div>
-                  </label>
+<!--                  <label class="payment-option">-->
+<!--                    <input type="radio" name="paymentMethod" [(ngModel)]="form.paymentMethod" value="credit-card"/>-->
+<!--                    <div class="payment-content">-->
+<!--                      <span class="payment-icon">💳</span>-->
+<!--                      <span>{{ 'checkout.creditCard' | translate }}</span>-->
+<!--                    </div>-->
+<!--                  </label>-->
+
+<!--                  <label class="payment-option">-->
+<!--                    <input type="radio" name="paymentMethod" [(ngModel)]="form.paymentMethod" value="paypal"/>-->
+<!--                    <div class="payment-content">-->
+<!--                      <span class="payment-icon">🅿️</span>-->
+<!--                      <span>PayPal</span>-->
+<!--                    </div>-->
+<!--                  </label>-->
+
+<!--                  <label class="payment-option">-->
+<!--                    <input type="radio" name="paymentMethod" [(ngModel)]="form.paymentMethod" value="bank-transfer"/>-->
+<!--                    <div class="payment-content">-->
+<!--                      <span class="payment-icon">🏦</span>-->
+<!--                      <span>{{ 'checkout.bankTransfer' | translate }}</span>-->
+<!--                    </div>-->
+<!--                  </label>-->
 
                   <label class="payment-option">
                     <input type="radio" name="paymentMethod" [(ngModel)]="form.paymentMethod" value="cod"/>
@@ -225,9 +262,9 @@ interface CartItem {
                     </div>
                   </label>
                 </div>
-                <p class="text-muted" *ngIf="form.paymentMethod !== 'cod'">
-                  (Hiện chỉ hỗ trợ COD. Các phương thức khác sẽ được xử lý sau.)
-                </p>
+<!--                <p class="text-muted" *ngIf="form.paymentMethod !== 'cod'">-->
+<!--                  (Hiện chỉ hỗ trợ COD. Các phương thức khác sẽ được xử lý sau.)-->
+<!--                </p>-->
               </div>
 
               <!-- Order Notes -->
@@ -250,7 +287,7 @@ interface CartItem {
               <button
                 type="submit"
                 class="btn btn-primary btn-full place-order-btn"
-                [disabled]="!isFormValid() || isProcessing() || form.paymentMethod !== 'cod'">
+                [disabled]="!isFormValid() || isProcessing()">
                 <span *ngIf="isProcessing()" class="loading-spinner"></span>
                 {{ isProcessing() ? ('common.loading' | translate) : ('checkout.placeOrder' | translate) }}
               </button>
@@ -260,6 +297,39 @@ interface CartItem {
 
           <!-- Order Summary -->
           <div class="order-summary">
+            <div class="coupon-box">
+              <label class="section-title" style="display:block;margin-bottom:.75rem">Mã giảm giá</label>
+
+              <div *ngIf="loadingCoupons(); else couponsReady" class="text-muted">Đang tải mã…</div>
+              <ng-template #couponsReady>
+                <ng-container *ngIf="eligibleCoupons().length; else noCoupon">
+                  <select class="form-input" [(ngModel)]="selectedCode" (change)="applySelectedCoupon()">
+                    <option [ngValue]="null">-- Chọn mã --</option>
+                    <option *ngFor="let c of eligibleCoupons()" [ngValue]="c.code">
+                      {{ c.code }} ({{ couponLabel(c) }})
+                      <ng-container *ngIf="c.minSubtotal">
+                        – tối thiểu {{ c.minSubtotal | number:'1.0-0' }}đ
+                      </ng-container>
+                      – giảm {{ c.discount | number:'1.0-0' }}đ
+                    </option>
+                  </select>
+
+                  <div class="coupon-chip" *ngIf="selectedCode">
+                    <span class="coupon-chip__text">
+                      {{ selectedCode }}
+                      <ng-container *ngIf="discount() > 0">
+                        — giảm {{ discount() | number:'1.0-0' }}đ
+                      </ng-container>
+                    </span>
+                    <button type="button" class="coupon-chip__close" (click)="clearCoupon()" aria-label="Bỏ mã">×</button>
+                  </div>
+                </ng-container>
+                <ng-template #noCoupon>
+                  <div class="text-muted">Không có mã phù hợp với đơn hiện tại.</div>
+                </ng-template>
+              </ng-template>
+            </div>
+
             <div class="summary-card">
               <h3 class="summary-title">{{ 'checkout.orderSummary' | translate }}</h3>
 
@@ -308,11 +378,20 @@ interface CartItem {
                   </span>
                 </div>
 
+                <div class="summary-row" *ngIf="discount() > 0">
+                  <span>Giảm giá</span>
+                  <span>-
+                    {{ getCurrentLang() === 'en' ? '$' : '' }}
+                    {{ discount() | number:'1.0-0' }}
+                    {{ getCurrentLang() === 'vi' ? ' ₫' : '' }}
+                  </span>
+                </div>
+
                 <div class="summary-row total">
                   <span>{{ 'checkout.total' | translate }}</span>
                   <span>
                     {{ getCurrentLang() === 'en' ? '$' : '' }}
-                    {{ total() | number:'1.0-0' }}
+                    {{ payable() | number:'1.0-0' }}
                     {{ getCurrentLang() === 'vi' ? ' ₫' : '' }}
                   </span>
                 </div>
@@ -343,11 +422,18 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   private auth = inject(AuthService);
   private orders = inject(OrdersService);
   private loc = inject(LocationService);
+  private coupons = inject(CouponService);
 
   user: User | null = null;
 
   cartItems = signal<CartItem[]>([]);
   isProcessing = signal(false);
+
+  eligibleCoupons = signal<EligibleCouponRes[]>([]);
+  selectedCode: string | null = null;
+  discount = signal<number>(0);
+  couponMsg = signal<string>('');
+  loadingCoupons = signal<boolean>(false);
 
   // address lists
   provinces: Province[] = [];
@@ -379,6 +465,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   shipping = computed(() => (this.subtotal() > 500_000 ? 0 : 25_000));
   tax = computed(() => Math.round(this.subtotal() * 0.08));
   total = computed(() => this.subtotal() + this.shipping() + this.tax());
+  payable = computed(() => Math.max(this.total() - this.discount(), 0));
 
   ngOnInit(): void {
     // Cart
@@ -387,6 +474,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       .subscribe(items => {
         this.cartItems.set(items);
         if (!items.length) this.router.navigate(['/cart']);
+        this.refreshCoupons();
       });
 
     // User & prefill
@@ -395,6 +483,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       .subscribe(u => {
         this.user = u;
         if (u) this.fillFormFromUser(u);
+        this.refreshCoupons();
       });
 
     if (!this.auth.currentUser && this.auth.accessToken) {
@@ -421,6 +510,51 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.destroy$.next(); this.destroy$.complete();
+  }
+
+  private refreshCoupons() {
+    if (!this.user) {
+      this.eligibleCoupons.set([]);
+      this.clearCoupon();
+      return;
+    }
+    const sub = this.subtotal();
+    this.loadingCoupons.set(true);
+
+    this.coupons.eligible(sub)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(list => {
+        this.eligibleCoupons.set(list);
+
+        // Nếu code đang chọn không còn trong danh sách hợp lệ => clear
+        if (this.selectedCode && !list.some(x => x.code === this.selectedCode)) {
+          this.clearCoupon();
+        } else if (this.selectedCode) {
+          this.applySelectedCoupon(); // cập nhật discount theo bản mới nhất
+        }
+        this.loadingCoupons.set(false);
+      });
+  }
+
+  applySelectedCoupon() {
+    if (!this.selectedCode) { this.clearCoupon(); return; }
+    const hit = this.eligibleCoupons().find(x => x.code === this.selectedCode);
+    if (!hit) { this.clearCoupon(); return; }
+
+    this.discount.set(hit.discount || 0);
+    this.couponMsg.set(hit.code || '');
+  }
+
+  clearCoupon(msg: string = '') {
+    this.selectedCode = null;
+    this.discount.set(0);
+    this.couponMsg.set(msg);
+  }
+
+  couponLabel(c: EligibleCouponRes) {
+    return (String(c.type).toLowerCase() === 'percentage')
+      ? `-${c.value}%`
+      : `-${(c.value ?? 0).toLocaleString('vi-VN')}đ`;
   }
 
   private fillFormFromUser(u: User): void {
@@ -576,10 +710,10 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     }
 
     const method = this.form.paymentMethod;
-    if (method !== 'cod') {
-      alert('Hiện tại chỉ hỗ trợ thanh toán COD.');
-      return;
-    }
+    // if (method !== 'cod') {
+    //   alert('Hiện tại chỉ hỗ trợ thanh toán COD.');
+    //   return;
+    // }
 
     // Assemble address
     const street = String(this.form.street || '').trim();
@@ -609,8 +743,8 @@ export class CheckoutComponent implements OnInit, OnDestroy {
           (this.auth.currentUser as any).userId || (this.auth.currentUser as any).id,
           {
             firstName: this.form.firstName,
-            lastName:  this.form.lastName,
-            phone:     this.form.phone,
+            lastName: this.form.lastName,
+            phone: this.form.phone,
             street,
             wardName,
             districtName,
@@ -639,11 +773,21 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       // Create order
       const order = await firstValueFrom(this.orders.createOrder(req));
 
-      // // Clear cart FE + success
-      // this.cartService.clearCart();
+      if (method === 'cod') {
+        this.router.navigate(['/checkout/success', order.id], { queryParams: { method } });
+        return;
+      }
+
+      const amount = this.payable();
       this.router.navigate(
-        ['/checkout/success', order.id],
-        { queryParams: { method } }
+        ['/payment/start'],
+        {
+          queryParams: {
+            provider: method,
+            amount: amount,
+            shopOrderId: order.id
+          }
+        }
       );
     } catch (e) {
       console.error('Order failed:', e);

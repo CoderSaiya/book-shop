@@ -195,7 +195,8 @@
       "continueShopping": "Tiếp tục mua sắm",
       "needHelp": "Cần hỗ trợ với đơn hàng?",
       "contactSupport": "Liên hệ đội ngũ hỗ trợ"
-    }
+    },
+    "postalCode": "Mã vùng"
   },
   "auth": {
     "login": "Đăng nhập",
@@ -281,5 +282,36 @@
     "reset": "Đặt lại",
     "showMore": "Hiển thị thêm",
     "showLess": "Hiển thị ít hơn"
+  },
+  "orders": {
+    "title": "Đơn hàng của bạn",
+    "subtitle": "Đơn hàng của bạn",
+    "filterByStatus": "Trạng thái",
+    "allOrders": "Tất cả",
+    "status": {
+      "pending": "Đang xác nhận",
+      "processing": "Đã xác nhận",
+      "shipped": "Đang giao",
+      "delivered": "Đã giao",
+      "cancelled": "Đã hủy"
+    },
+    "sortBy": "Sắp xếp",
+    "sort": {
+      "dateDesc": "ngày đăt giảm dần",
+      "dateAsc": "ngày đặt tăng dần",
+      "totalDesc": "giá trị giảm dần",
+      "totalAsc": "giá trị tăng dần"
+    },
+    "orderNumber": "Mã đơn",
+    "orderDate": "Ngày đặt",
+    "items": "Sản phẩm",
+    "shippingAddress": "Địa chỉ giao hàng",
+    "phone": "Số điện thoại",
+    "reorder": "Đặt lại",
+    "cancelOrder": "Hủy đơn",
+    "paymentMethod": "Phương thức thanh toán",
+    "noOrders": "Không có đơn hàng nào",
+    "noOrdersMessage": "Không tìm thấy đơn hàng hoặc đơn hàng đang được tạo, vui lòng đợi trong ít phút!",
+    "startShopping": "Bắt đầu mua sắm!"
   }
 }

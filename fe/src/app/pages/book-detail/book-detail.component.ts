@@ -100,7 +100,7 @@ import {NotifyService} from '../../core/services/notify.service';
                   </div>
                   <div class="detail-item">
                     <span class="detail-label">{{ 'bookDetail.publishedDate' | translate }}:</span>
-                    <span class="detail-value">{{ book.publishedDate | date:'mediumDate' }}</span>
+                    <span class="detail-value">{{ book.publishedDate }}</span>
                   </div>
                   <!--                  <div class="detail-item">-->
                   <!--                    <span class="detail-label">{{ 'bookDetail.pages' | translate }}:</span>-->

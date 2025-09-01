@@ -163,7 +163,7 @@ export class RegisterComponent implements OnDestroy {
   }
 
   private isValidEmail(email: string): boolean {
-    const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
+    const emailRegex =/^\S+@\S+\.\S+$/;
     return emailRegex.test(email);
   }
 }
