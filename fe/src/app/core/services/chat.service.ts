@@ -16,6 +16,7 @@ export interface ChatBook {
   };
   price: number;
   images: string[];
+  bookId?: string;
 }
 
 export interface ChatAction {

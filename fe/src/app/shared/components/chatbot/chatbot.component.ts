@@ -57,8 +57,32 @@ import {getLangText} from '../../utils/lang';
           <div class="actions" *ngIf="m.pendingActions?.length">
             <div *ngFor="let a of m.pendingActions" class="action">
               <div class="action-text">
-                <strong>Hành động:</strong> {{a.type}}
-                <pre>{{ a.payload | json }}</pre>
+                <ng-container [ngSwitch]="a.type">
+                  <div *ngSwitchCase="'AddToCart'">
+                    <strong>Thêm vào giỏ</strong>
+                    <div class="line">
+                      <span class="title">
+                        {{ getBookTitleFromContext(m.books, a.payload?.bookId) }}
+                      </span>
+                      <span class="qty">× {{ a.payload?.quantity || 1 }}</span>
+                    </div>
+                  </div>
+
+                  <div *ngSwitchCase="'AddToCartBulk'">
+                    <strong>Thêm vào giỏ ({{ a.payload?.items?.length || 0 }} sản phẩm)</strong>
+                    <ul class="lines">
+                      <li *ngFor="let it of (a.payload?.items || [])">
+                        {{ getBookTitleFromContext(m.books, it.bookId) }} × {{ it.quantity || 1 }}
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div *ngSwitchDefault>
+                    <strong>Hành động:</strong> {{ a.type }}
+                  </div>
+                </ng-container>
+<!--                <strong>Hành động:</strong> {{a.type}}-->
+<!--                <pre>{{ a.payload | json }}</pre>-->
               </div>
               <div class="action-ctas">
                 <button (click)="confirm(a)">Xác nhận</button>
@@ -105,6 +129,13 @@ export class ChatbotComponent implements OnInit {
 
   quickAdd(book: ChatBook) {
     this.chatbotService.quickAdd(book);
+  }
+
+  getBookTitleFromContext(books: ChatBook[] | undefined, id: string | undefined) {
+    console.log(books)
+    if (!id || !books?.length) return '(không rõ sản phẩm)';
+    const b = books.find(x => x.bookId === id);
+    return b ? getLangText(b.title) : `Mã: ${id.slice(0, 8)}…`;
   }
 
   async confirm(a: ChatAction) {
