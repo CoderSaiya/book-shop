@@ -11,6 +11,7 @@ public class ChatService(
     IIntentClassifier classifier,
     IBookService bookService,
     ICategoryService categoryService,
+    ISessionMemory memory,
     ILogger<ChatService> logger
 ) : IChatService
 {
@@ -27,19 +28,19 @@ public class ChatService(
         if (conf < 0.55f && IntentHelper.LooksLikeRecommend(userMessage))
         {
             intent = "recommend";
-            conf   = Math.Max(conf, 0.55f);
+            conf = Math.Max(conf, 0.55f);
         }
 
         switch (intent)
         {
             case "recommend":
-                return await HandleRecommend(userMessage, intent, conf);
+                return await HandleRecommend(sessionId, userMessage, intent, conf);
 
             case "refine":
-                return await HandleRefine(userMessage, intent, conf);
+                return await HandleRefine(sessionId, userMessage, intent, conf);
 
             case "add_to_cart":
-                return await HandleAddToCart(userMessage, intent, conf);
+                return await HandleAddToCart(sessionId, userMessage, intent, conf);
 
             case "confirm_yes":
                 return new ChatBotRes("Đã xác nhận 👍", intent, conf);
@@ -55,11 +56,11 @@ public class ChatService(
 
             default:
                 // fallback
-                return await HandleRecommend(userMessage, "recommend", conf * 0.8f);
+                return await HandleRecommend(sessionId, userMessage, "recommend", conf * 0.8f);
         }
     }
 
-    private async Task<ChatBotRes> HandleRecommend(string text, string intent, float conf)
+    private async Task<ChatBotRes> HandleRecommend(Guid sessionId, string text, string intent, float conf)
     {
         var (min, max) = IntentHelper.ExtractPriceRange(text);
         Console.Write("min:" + max + " max: " + max);
@@ -106,7 +107,8 @@ public class ChatService(
         if (!exactFound)
         {
             var suggest = await bookService.GetTrendingAsync(days: 30, limit: 8);
-
+            memory.SaveRecommendations(sessionId, suggest);
+            
             string catText = (catMaps.Count > 0)
                 ? $" theo thể loại {string.Join(", ", catMaps.Select(c => c.Name))}"
                 : "";
@@ -126,6 +128,8 @@ public class ChatService(
                 Books: suggest.Select(b => new { b.BookId, b.Title, b.Price, b.Images })
             );
         }
+        
+        memory.SaveRecommendations(sessionId, top);
 
         // build câu trả lời
         string catText2 = (catMaps.Count > 0)
@@ -153,42 +157,89 @@ public class ChatService(
         );
     }
 
-    private async Task<ChatBotRes> HandleRefine(string text, string intent, float conf)
+    private async Task<ChatBotRes> HandleRefine(Guid sessionId, string text, string intent, float conf)
     {
         // refine như lượt recommend có thêm range
-        return await HandleRecommend(text, intent, conf);
+        return await HandleRecommend(sessionId, text, intent, conf);
     }
 
-    private async Task<ChatBotRes> HandleAddToCart(string text, string intent, float conf)
+    private async Task<ChatBotRes> HandleAddToCart(Guid sessionId, string text, string intent, float conf)
     {
-        var qty = IntentHelper.ExtractQuantity(text, 1);
-        var kw  = IntentHelper.BuildKeywordForAddToCart(text);
+        var recos = memory.GetRecommendations(sessionId);
+        var req = AddToCartHelper.Parse(text);
 
-        var results = await bookService.Search(kw, page: 1, pageSize: 20);
-        var best = results.FirstOrDefault();
-        if (best is null)
+        var chosen = new List<(BookRes Book, int Qty)>();
+
+        if (req.All && recos.Count > 0)
         {
-            return new ChatBotRes($"Mình chưa tìm ra sách trùng khớp để thêm giỏ. Bạn mô tả rõ tên sách hơn nhé?", intent, conf);
+            int each = req.GlobalEachQty ?? 1;
+            chosen.AddRange(recos.Select(b => (b, each)));
         }
-        
-        var action = new BotAction(
-            Type: "AddToCart",
-            Payload: new { bookId = best.BookId, quantity = qty }
-        );
 
-        var reply = $"Mình đã chuẩn bị thêm **{qty} x {best.Title}** vào giỏ. Xác nhận nhé?";
+        // match theo index
+        foreach (var item in req.Items.Where(i => i.Index is not null))
+        {
+            var idx = item.Index!.Value;
+            if (idx >= 1 && idx <= recos.Count)
+            {
+                var q = item.Quantity > 0 ? item.Quantity : (req.GlobalEachQty ?? 1);
+                chosen.Add((recos[idx - 1], q));
+            }
+        }
+
+        // match theo tiêu đề
+        foreach (var item in req.Items.Where(i => i.Title is not null))
+        {
+            var found = recos.FirstOrDefault(b => AddToCartHelper.FuzzyTitleMatch(item.Title!, b.Title.Vi));
+            if (found is not null)
+            {
+                var q = item.Quantity > 0 ? item.Quantity : (req.GlobalEachQty ?? 1);
+                chosen.Add((found, q));
+            }
+        }
+
+        // nếu vẫn chưa chọn được gì, fallback như cũ: search theo keyword suy luận
+        if (chosen.Count == 0)
+        {
+            var qty = IntentHelper.ExtractQuantity(text, 1);
+            var kws = IntentHelper.BuildKeywordForAddToCart(text);
+            
+            BookRes? best = null;
+            foreach (var kw in kws)
+            {
+                Console.Write("ABC:" + kw);
+                var hits = await bookService.Search(kw, page: 1, pageSize: 10);
+                best = hits.FirstOrDefault();
+                if (best is not null) break;
+            }
+            Console.Write(best is null);
+            
+            if (best is null)
+                return new ChatBotRes($"Mình chưa tìm ra sách trùng khớp để thêm giỏ. Bạn mô tả rõ tên sách hơn nhé?", intent, conf);
+
+            chosen.Add((best, qty));
+        }
+
+        // gộp trùng (nếu user nhắc tên/index 2 lần)
+        var grouped = chosen
+            .GroupBy(x => x.Book.BookId)
+            .Select(g => (Book: g.First().Book, Qty: g.Sum(x => x.Qty)))
+            .ToList();
+
+        // tạo nhiều actions
+        var actions = grouped.Select(g =>
+            new BotAction("AddToCart", new { bookId = g.Book.BookId, quantity = g.Qty })
+        ).ToList();
+
+        var summary = string.Join(", ", grouped.Select(g => $"{g.Qty} × {g.Book.Title.Vi}"));
+        var reply = $"Mình đã chuẩn bị thêm {grouped.Count} mặt hàng vào giỏ: {summary}. Xác nhận nhé?";
+
         return new ChatBotRes(
             Text: reply,
             Intent: intent,
             Confidence: conf,
-            Books: [new
-            {
-                best.BookId, 
-                best.Title, 
-                best.Price, 
-                best.Images
-            }],
-            Actions: [action]
+            Books: grouped.Select(g => new { g.Book.BookId, g.Book.Title, g.Book.Price, g.Book.Images }),
+            Actions: actions
         );
     }
 }

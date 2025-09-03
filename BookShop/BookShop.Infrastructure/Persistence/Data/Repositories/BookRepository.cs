@@ -1,5 +1,7 @@
-﻿using BookShop.Domain.Entities;
+﻿using System.Linq.Expressions;
+using BookShop.Domain.Entities;
 using BookShop.Domain.Interfaces;
+using BookShop.Domain.Views;
 using BookShop.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,7 +15,8 @@ public class BookRepository(AppDbContext context) : GenericRepository<Book>(cont
     {
         // if (IsEmptySearch(keyword))
         //     return Array.Empty<Book>();
-
+        
+        const string AI = "Vietnamese_100_CI_AI";
         var words = keyword!
             .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .Select(EscapeLike)
@@ -27,14 +30,18 @@ public class BookRepository(AppDbContext context) : GenericRepository<Book>(cont
             ")
             .AsNoTracking();
         
+        Expression<Func<BookSearch, bool>> predicate = bs => false;
         foreach (var p in words)
         {
             var pat = p;
-            q = q.Where(bs =>
-                EF.Functions.Like(bs.Title, pat) ||
-                EF.Functions.Like(bs.AuthorName, pat) ||
-                EF.Functions.Like(bs.PublisherName, pat));
+            Expression<Func<BookSearch, bool>> term = bs =>
+                EF.Functions.Like(EF.Functions.Collate(bs.Title, AI), p) ||
+                EF.Functions.Like(EF.Functions.Collate(bs.AuthorName, AI), p) ||
+                EF.Functions.Like(EF.Functions.Collate(bs.PublisherName, AI), p);
+            predicate = OrElse(predicate, term);
         }
+        
+        q = q.Where(predicate);
 
         var hits = await q
             .OrderBy(x => x.Title)
@@ -235,6 +242,20 @@ public class BookRepository(AppDbContext context) : GenericRepository<Book>(cont
             .AsNoTracking()
             .Take(limit)
             .ToListAsync();
+    }
+    
+    static Expression<Func<T, bool>> OrElse<T>(Expression<Func<T, bool>> left, Expression<Func<T, bool>> right)
+    {
+        var param = left.Parameters[0];
+        var body = Expression.OrElse(
+            left.Body,
+            new ParameterReplace(right.Parameters[0], param).Visit(right.Body)!);
+        return Expression.Lambda<Func<T, bool>>(body, param);
+    }
+    
+    sealed class ParameterReplace(ParameterExpression from, ParameterExpression to) : ExpressionVisitor
+    {
+        protected override Expression VisitParameter(ParameterExpression node) => node == from ? to : base.VisitParameter(node);
     }
 
     public async Task<IEnumerable<Book>> GetByCategoryAsync(List<Guid> ids) =>

@@ -79,6 +79,7 @@ public static class DependencyInjection
         services.AddScoped<IPaymentFactory, PaymentFactory>();
         
         services.AddHostedService<RabbitMqListener>();
+        services.AddScoped<ISessionMemory, InMemorySessionMemory>();
         
         return services;
     }

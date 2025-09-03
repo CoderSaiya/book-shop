@@ -6,13 +6,44 @@ namespace BookShop.Domain.Helpers;
 
 public static class IntentHelper
 {
-    private static readonly Regex _rxMoney = new(@"(\d+)\s*(k|nghìn|nghin|ngàn|ngan)?", RegexOptions.IgnoreCase|RegexOptions.Compiled);
-    private static readonly Regex _rxQty   = new(@"(?<!\d)(\d+)(?!\d)", RegexOptions.Compiled);
+    private static readonly Regex RxMoney = new(@"(\d+)\s*(k|nghìn|nghin|ngàn|ngan)?", RegexOptions.IgnoreCase|RegexOptions.Compiled);
+    private static readonly Regex RxQty = new(@"(?<!\d)(\d+)(?!\d)", RegexOptions.Compiled);
 
+    private static readonly Regex RxQuoted =
+        new("(?:\"([^\"]+)\")|(?:“([^”]+)”)|(?:‘([^’]+)’)|(?:'([^']+)')",
+            RegexOptions.Compiled);
+
+    private static readonly Regex RxQtyPhrase =
+        new(@"\b(?:x|\*)\s*\d+\b|\b\d+\s*(?:quy[eê]n|cu[oô]n|b[aà]n|t[aâ]p|copy)\b",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+    private static readonly Regex RxIndexRef =
+        new(@"\b(?:#|cu[oô]n|s[aá]ch)\s*#?\s*\d+\b",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+    private static readonly Regex RxNonWord =
+        new(@"[^\p{L}\p{N}\s]+", RegexOptions.Compiled);
+
+    private static readonly Regex RxMultiSpace =
+        new(@"\s+", RegexOptions.Compiled);
+    
+    private static readonly string[] StopTokens = new[]
+    {
+        // hành động
+        "them","bo","vao","gio","bo vao gio","vao gio","add","mua","dat","order",
+        "dua","cho vao","chon","lay","giup","giup minh","cho minh","cho em","xac nhan",
+        // đơn vị
+        "quyen","cuon","sach","ban","tap","volume","vol","copy",
+        // từ nối/đệm
+        "va","voi","hoac","hay","nua","tiep","di","nhe",
+        // đại từ/phụ trợ thường gặp
+        "toi","toi","minh","ban","em","anh","chi"
+    };
+    
     public static (decimal? min, decimal? max) ExtractPriceRange(string text)
     {
         // Bắt tất cả số, hiểu "k" là *1000
-        var ms = _rxMoney.Matches(text);
+        var ms = RxMoney.Matches(text);
         if (ms.Count == 0) return (null, null);
 
         var vals = new List<decimal>();
@@ -32,7 +63,7 @@ public static class IntentHelper
 
     public static int ExtractQuantity(string text, int defaultQty = 1)
     {
-        var m = _rxQty.Match(text);
+        var m = RxQty.Match(text);
         if (m.Success && int.TryParse(m.Groups[1].Value, out var q))
             return Math.Clamp(q, 1, 50);
         return defaultQty;
@@ -93,24 +124,71 @@ public static class IntentHelper
         return sb.ToString().Normalize(NormalizationForm.FormC);
     }
 
-    public static string BuildKeywordForAddToCart(string text)
+    public static List<string> BuildKeywordForAddToCart(string text, int maxCandidates = 5)
     {
-        // loại bớt stop-phrases phổ biến
-        var lowered = text.ToLowerInvariant();
-        var stopPhrases = new[]
-        {
-            "thêm", "mua", "bỏ vào giỏ", "vào giỏ", "add", "cho mình", "giúp mình", "giúp", "1 quyển", "1 cuốn",
-            "2 quyển", "2 cuốn", "3 quyển", "3 cuốn", "quyển", "cuốn", "tập", "bản", "sách"
-        };
-        foreach (var s in stopPhrases)
-            lowered = lowered.Replace(s, "");
+        var candidates = new List<string>();
 
-        return lowered.Trim();
+        // Ưu tiên tiêu đề trong ngoặc kép (giữ nguyên dấu)
+        foreach (Match m in RxQuoted.Matches(text))
+        {
+            var title = FirstNonEmpty(m.Groups[1].Value, m.Groups[2].Value, m.Groups[3].Value, m.Groups[4].Value);
+            if (!string.IsNullOrWhiteSpace(title))
+                candidates.Add(title.Trim());
+        }
+
+        // Làm sạch trực tiếp trên chuỗi có dấu
+        var cleaned = text.ToLowerInvariant();
+        cleaned = RxQtyPhrase.Replace(cleaned, " ");
+        cleaned = RxIndexRef.Replace(cleaned, " ");
+        cleaned = RxNonWord.Replace(cleaned, " ");
+        cleaned = RxMultiSpace.Replace(cleaned, " ").Trim();
+
+        // Loại stopword bằng cách so khớp phiên bản "không dấu"
+        var keptTokens = new List<string>();
+        foreach (var tok in cleaned.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+        {
+            if (Regex.IsMatch(tok, @"^\d+$")) continue; // bỏ số lẻ
+            var noAccent = RemoveDiacritics(tok);
+            if (StopTokens.Contains(noAccent)) continue;
+            keptTokens.Add(tok);  // giữ dấu
+        }
+
+        var main = string.Join(' ', keptTokens).Trim();
+        if (!string.IsNullOrWhiteSpace(main))
+            candidates.Add(main);
+
+        // inh thêm n-gram
+        for (int w = Math.Min(8, keptTokens.Count); w >= 3; w--)
+        {
+            for (int i = 0; i + w <= keptTokens.Count; i++)
+            {
+                var span = string.Join(' ', keptTokens.Skip(i).Take(w));
+                if (candidates.Count >= maxCandidates) break;
+                if (!string.IsNullOrWhiteSpace(span) &&
+                    !candidates.Contains(span, StringComparer.OrdinalIgnoreCase))
+                    candidates.Add(span);
+            }
+            if (candidates.Count >= maxCandidates) break;
+        }
+
+        // Duy nhất & cắt số lượng theo yêu cầu
+        return candidates
+            .Select(s => s.Trim())
+            .Where(s => s.Length >= 2)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Take(maxCandidates)
+            .ToList();
     }
 
     public static bool LooksLikeRecommend(string text)
     {
         var t = text.ToLowerInvariant();
         return t.Contains("gợi ý") || t.Contains("tư vấn") || t.Contains("đề xuất") || t.Contains("cho tôi") || t.Contains("cần mua") || t.Contains("muốn sách");
+    }
+    
+    private static string FirstNonEmpty(params string[] xs)
+    {
+        foreach (var x in xs) if (!string.IsNullOrWhiteSpace(x)) return x;
+        return string.Empty;
     }
 }
