@@ -21,7 +21,7 @@ public sealed class IntentClassifier(
 
     public IntentPredictionDto Predict(string text)
     {
-        var ids  = _hfTok.Encode(text).Select(i => (long)i).ToList(); // đã gồm BOS/EOS theo post-processor JSON
+        var ids = _hfTok.Encode(text).Select(i => (long)i).ToList(); // đã gồm BOS/EOS theo post-processor JSON
         if (ids.Count > maxLen) ids = ids.Take(maxLen).ToList();
 
         var attn = Enumerable.Repeat(1L, ids.Count).ToList();
@@ -33,7 +33,7 @@ public sealed class IntentClassifier(
         }
 
         var inputIds = new DenseTensor<long>(new[] {1, maxLen});
-        var mask     = new DenseTensor<long>(new[] {1, maxLen});
+        var mask = new DenseTensor<long>(new[] {1, maxLen});
         for (int i = 0; i < maxLen; i++){ inputIds[0,i]=ids[i]; mask[0,i]=attn[i]; }
 
         var inputs = new List<NamedOnnxValue> {
