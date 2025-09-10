@@ -20,7 +20,7 @@ export class OrdersService {
     return this.http.get<GlobalResponse<OrderDetailRes>>(this.base + `/${id}`);
   }
 
-  getMyOrders(page = 1, pageSize = 20): Observable<OrderDetailRes[]> {
+  getMyOrders(page = 1, pageSize = 5): Observable<OrderDetailRes[]> {
     return this.http
       .get<OrderDetailRes[] | GlobalResponse<OrderDetailRes[]>>(
         `${this.base}/my`,
